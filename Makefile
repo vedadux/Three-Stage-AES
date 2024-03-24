@@ -5,10 +5,11 @@ SV_DIR = src
 V_DIR = tmp
 
 SV_PACKAGE = $(SV_DIR)/aes128_package.sv
-SV_FILES = $(SV_DIR)/register.sv $(SV_DIR)/share_zero.sv
-V_FILES = $(patsubst $(SV_DIR)/%.sv,$(V_DIR)/%.v,$(SV_FILES))
+SOURCES = register.sv bv2_scl_n.sv bv2_mul.sv bv4_mul.sv generic_mul.sv share_zero.sv reduce_xor.sv hpc1_mul.sv
+SV_FILES = $(patsubst %.sv,$(SV_DIR)/%.sv,$(SOURCES))
+V_FILES =  $(patsubst %.sv, $(V_DIR)/%.v,$(SOURCES))
 
-TOP_MODULE = share_zero
+TOP_MODULE = hpc1_mul
 OUTPUT_FILE = $(V_DIR)/netlist.v
 
 .PHONY = all sv2v clean

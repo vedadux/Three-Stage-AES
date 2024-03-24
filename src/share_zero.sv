@@ -2,7 +2,7 @@ import aes128_package::*;
 
 module share_zero #(
     parameter NUM_SHARES = 2,
-    parameter type T = bv2_t
+    parameter BIT_WIDTH = 2
 )(
     input T[NUM_NEEDED-1:0] in_random,
     output T[NUM_SHARES-1:0] out_random,
@@ -15,6 +15,7 @@ module share_zero #(
                             0
     )));
 
+    typedef bit[BIT_WIDTH] T;
     T[NUM_SHARES-1:0] shared_zero;
     generate
         if (NUM_SHARES == 2) begin
