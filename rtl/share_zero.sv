@@ -4,18 +4,19 @@ module share_zero #(
     parameter NUM_SHARES = 2,
     parameter BIT_WIDTH = 2
 )(
-    input T[NUM_NEEDED-1:0] in_random,
-    output T[NUM_SHARES-1:0] out_random,
-    input in_clock,
-    input in_reset
+    in_random, out_random, in_clock, in_reset
 );
     localparam NUM_NEEDED = (NUM_SHARES == 2) ? 1 : (
                             (NUM_SHARES == 3) ? 2 : (
-                            (NUM_SHARES == 4 || NUM_SHARES == 5) ? NUM_SHARES : (
-                            0
-    )));
-
-    typedef bit[BIT_WIDTH] T;
+                            (NUM_SHARES == 4 || NUM_SHARES == 5) ? NUM_SHARES : 0
+                            ));
+    typedef bit[BIT_WIDTH-1:0] T;
+    
+    input  T[NUM_NEEDED-1:0] in_random;
+    output T[NUM_SHARES-1:0] out_random;
+    input  in_clock;
+    input  in_reset;
+    
     T[NUM_SHARES-1:0] shared_zero;
     generate
         if (NUM_SHARES == 2) begin

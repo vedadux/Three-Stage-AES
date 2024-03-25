@@ -3,11 +3,14 @@ import aes128_package::*;
 module generic_mul #(
     parameter BIT_WIDTH = 2
 )(
-    input T in_a,
-    input T in_b,
-    output T out_c
+    in_a, in_b, out_c
 );
     typedef bit[BIT_WIDTH-1:0] T;
+
+    input  T in_a;
+    input  T in_b;
+    output T out_c;
+
     generate
         if (BIT_WIDTH == 1)
             assign out_c = in_a & in_b;

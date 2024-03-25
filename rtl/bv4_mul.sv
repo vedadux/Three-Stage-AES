@@ -1,10 +1,12 @@
 import aes128_package::*;
 
 module bv4_mul (
-    input bv4_t in_a,
-    input bv4_t in_b,
-    output bv4_t out_c
+    in_a, in_b, out_c
 );
+    input  bv4_t in_a;
+    input  bv4_t in_b;
+    output bv4_t out_c;
+
     bv2_t a_xor, b_xor;
     assign a_xor = in_a[1:0] ^ in_a[3:2];
     assign b_xor = in_b[1:0] ^ in_b[3:2];

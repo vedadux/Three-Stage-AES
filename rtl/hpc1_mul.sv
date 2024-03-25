@@ -4,16 +4,19 @@ module hpc1_mul #(
     parameter NUM_SHARES = 2,
     parameter BIT_WIDTH = 2
 )(
-    input T[NUM_SHARES-1:0] in_a,
-    input T[NUM_SHARES-1:0] in_b,
-    input T[NUM_SHARES-1:0] in_r,
-    input T[NUM_QUARDATIC-1:0] in_p,
-    output T[NUM_SHARES-1:0] out_c,
-    input in_clock,
-    input in_reset
+    in_a, in_b, in_r, in_p, out_c, in_clock, in_reset
 );
     localparam NUM_QUARDATIC = num_quad(NUM_SHARES);
     typedef bit[BIT_WIDTH-1:0] T;
+
+    input T[NUM_SHARES-1:0] in_a;
+    input T[NUM_SHARES-1:0] in_b;
+    input T[NUM_SHARES-1:0] in_r;
+    input T[NUM_QUARDATIC-1:0] in_p;
+    output T[NUM_SHARES-1:0] out_c;
+    input in_clock;
+    input in_reset;
+
     // reshare input in_a first
     T[NUM_SHARES-1:0] reg_ref_a_d;
     T[NUM_SHARES-1:0] reg_ref_a_q;

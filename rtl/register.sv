@@ -2,11 +2,13 @@
 module register #(
     parameter type T = bit
 )(
-    input T in_value,
-    output T out_value,
-    input in_clock,
-    input in_reset
+    in_value, out_value, in_clock, in_reset
 );
+    input  T in_value;
+    output T out_value;
+    input in_clock;
+    input in_reset;
+
     T reg_value_d;
     T reg_value_q;
     always_ff @(posedge in_clock) begin : gen_regs
@@ -14,6 +16,6 @@ module register #(
         else          reg_value_q <= reg_value_d;
     end
 
-    assign in_value = reg_value_d;
+    assign reg_value_d = in_value;
     assign out_value = reg_value_q;
 endmodule

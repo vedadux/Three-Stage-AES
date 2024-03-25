@@ -6,9 +6,8 @@ set VLOG_TOP_MODULE $::env(TOP_MODULE)
 foreach file $VLOG_IN_FILES {
     yosys read_verilog -defer $file
 }
-yosys chparam -set NUM_SHARES 5 -set BIT_WIDTH 1 $VLOG_TOP_MODULE
-yosys synth -top $VLOG_TOP_MODULE
-yosys flatten
+yosys chparam -set NUM_SHARES 3 -set BIT_WIDTH 1 $VLOG_TOP_MODULE
+yosys synth -top $VLOG_TOP_MODULE -flatten
 yosys clean -purge
 yosys write_verilog $VLOG_OUT_FILE
 # yosys write_json $JSON_OUT_FILE

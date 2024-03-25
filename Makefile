@@ -1,15 +1,15 @@
 SV2V = sv2v
 YOSYS = yosys
 
-SV_DIR = src
+SV_DIR = rtl
 V_DIR = tmp
 
 SV_PACKAGE = $(SV_DIR)/aes128_package.sv
-SOURCES = register.sv bv2_scl_n.sv bv2_mul.sv bv4_mul.sv generic_mul.sv share_zero.sv reduce_xor.sv hpc1_mul.sv
+SOURCES = register.sv bv2_scl_n.sv bv2_mul.sv bv4_mul.sv generic_mul.sv share_zero.sv reduce_xor.sv hpc1_mul.sv hpc3_mul.sv test.sv
 SV_FILES = $(patsubst %.sv,$(SV_DIR)/%.sv,$(SOURCES))
 V_FILES =  $(patsubst %.sv, $(V_DIR)/%.v,$(SOURCES))
 
-TOP_MODULE = hpc1_mul
+TOP_MODULE = test
 OUTPUT_FILE = $(V_DIR)/netlist.v
 
 .PHONY = all sv2v clean
