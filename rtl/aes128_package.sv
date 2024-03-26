@@ -1,5 +1,5 @@
-`ifndef AES128_PACKAGE
-`define AES128_PACKAGE
+`ifndef AES128_PACKAGE_SV
+`define AES128_PACKAGE_SV
 
 package aes128_package;
     function automatic int num_quad;
@@ -23,5 +23,5 @@ package aes128_package;
     typedef bit[3:0] bv4_t;
     typedef bit[7:0] bv8_t;
 
-endpackage
-`endif // AES128_PACKAGE
+endpackage : aes128_package
+`endif // AES128_PACKAGE_SV

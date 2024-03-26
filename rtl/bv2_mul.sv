@@ -1,8 +1,14 @@
-import aes128_package::*;
+`ifndef BV2_MUL_SV
+`define BV2_MUL_SV
 
+`include "aes128_package.sv"
+
+// Multiply input A with input B
 module bv2_mul (
     in_a, in_b, out_c
 );
+    import aes128_package::*;
+
     input  bv2_t in_a;
     input  bv2_t in_b;
     output bv2_t out_c;
@@ -19,3 +25,4 @@ module bv2_mul (
     assign out_c[0] = ab_dot[0] ^ ab_dot[2];
     assign out_c[1] = ab_dot[1] ^ ab_dot[2];
 endmodule
+`endif // BV2_MUL_SV

@@ -22,7 +22,7 @@ module test #(
     input in_clock;
     input in_reset;
     
-    // Multiply A and B
+    // Multiply B and A
     hpc3_mul #(
         .NUM_SHARES(NUM_SHARES),
         .BIT_WIDTH(BIT_WIDTH)
@@ -36,14 +36,14 @@ module test #(
         .in_reset(in_reset)
     );
 
-    // Multiply A and C
+    // Multiply C and A
     hpc3_mul #(
         .NUM_SHARES(NUM_SHARES),
         .BIT_WIDTH(BIT_WIDTH)
     ) mul2 (
         .in_a(in_c),
         .in_b(in_a),
-        .in_r(in_r_ab),
+        .in_r(in_r_ab), // .in_r(in_r_ac),
         .in_p(in_p_ac),
         .out_c(out_e),
         .in_clock(in_clock),

@@ -1,5 +1,6 @@
 import aes128_package::*;
 
+// Multiply input A with input B
 module generic_mul #(
     parameter BIT_WIDTH = 2
 )(
