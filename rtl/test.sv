@@ -1,5 +1,8 @@
+`ifndef TEST_SV
+`define TEST_SV
 
-import aes128_package::*;
+`include "aes128_package.sv"
+`include "hpc3_mul.sv"
 
 module test #(
     parameter NUM_SHARES = 3,
@@ -7,6 +10,7 @@ module test #(
 )(
     in_a, in_b, in_c, in_r_ab, in_r_ac, in_p_ab, in_p_ac, out_d, out_e, in_clock, in_reset
 );
+    import aes128_package::*;
     localparam NUM_QUADRATIC = num_quad(NUM_SHARES);
     typedef bit[BIT_WIDTH-1:0] T;
 
@@ -51,3 +55,4 @@ module test #(
     );
     
 endmodule
+`endif // TEST_SV

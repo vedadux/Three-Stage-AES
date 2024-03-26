@@ -1,4 +1,7 @@
-import aes128_package::*;
+`ifndef SHARE_ZERO_SV
+`define SHARE_ZERO_SV
+
+`include "register.sv"
 
 module share_zero #(
     parameter NUM_SHARES = 2,
@@ -41,5 +44,5 @@ module share_zero #(
         .in_clock(in_clock),
         .in_reset(in_reset)
     );
-    
-endmodule
+endmodule : share_zero
+`endif // SHARE_ZERO_SV

@@ -1,9 +1,15 @@
-import aes128_package::*;
+`ifndef BV4_SQ_SCL_S_SV
+`define BV4_SQ_SCL_S_SV
+
+`include "aes128_package.sv"
+`include "bv2_sq.sv"
+`include "bv2_scl_sigma2.sv"
 
 // Scale input by s = Sigma^2 * Z
 module bv4_sq_scl_s (
     in_a, out_b
 );
+    import aes128_package::*;
     input  bv4_t in_a;
     output bv4_t out_b;
 
@@ -23,4 +29,5 @@ module bv4_sq_scl_s (
     assign b[1] = a_sq[0] ^ a_sq[1];
 
     assign out_b = b;
-endmodule
+endmodule : bv4_sq_scl_s
+`endif // BV4_SQ_SCL_S_SV

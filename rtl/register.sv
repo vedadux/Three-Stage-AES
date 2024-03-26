@@ -1,3 +1,5 @@
+`ifndef REGISTER_SV
+`define REGISTER_SV
 
 module register #(
     parameter type T = bit
@@ -18,4 +20,5 @@ module register #(
 
     assign reg_value_d = in_value;
     assign out_value = reg_value_q;
-endmodule
+endmodule : register
+`endif // REGISTER_SV

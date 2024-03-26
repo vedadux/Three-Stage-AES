@@ -24,5 +24,5 @@ module bv2_mul (
 
     assign out_c[0] = ab_dot[0] ^ ab_dot[2];
     assign out_c[1] = ab_dot[1] ^ ab_dot[2];
-endmodule
+endmodule : bv2_mul
 `endif // BV2_MUL_SV

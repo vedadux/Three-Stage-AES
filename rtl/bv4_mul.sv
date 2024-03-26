@@ -1,9 +1,15 @@
-import aes128_package::*;
+`ifndef BV4_MUL_SV
+`define BV4_MUL_SV
+
+`include "aes128_package.sv"
+`include "bv2_mul.sv"
+`include "bv2_scl_sigma.sv"
 
 // Multiply input A with input B
 module bv4_mul (
     in_a, in_b, out_c
 );
+    import aes128_package::*;
     input  bv4_t in_a;
     input  bv4_t in_b;
     output bv4_t out_c;
@@ -26,4 +32,5 @@ module bv4_mul (
     assign c[1] = ab_dot[1] ^ mid;
 
     assign out_c = c;
-endmodule
+endmodule : bv4_mul
+`endif // BV4_MUL_SV

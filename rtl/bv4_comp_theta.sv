@@ -1,9 +1,16 @@
-import aes128_package::*;
+`ifndef BV4_COMP_THETA_SV
+`define BV4_COMP_THETA_SV
+
+`include "aes128_package.sv"
+`include "bv2_mul.sv"
+`include "bv2_sq.sv"
+`include "bv2_scl_sigma.sv"
 
 // Compute Theta = (Gamma_1 * Gamma_0 + (Gamma_1 + Gamma_0)^{2} * Sigma)^{-1}
 module bv4_comp_theta (
     in_a, out_b
 );
+    import aes128_package::*;
     input  bv4_t in_a;
     output bv2_t out_b;
 
@@ -22,4 +29,5 @@ module bv4_comp_theta (
     assign inv_in = a_mul ^ a_xor_sq_scl;
 
     bv2_sq inv(.in_a(inv_in), .out_b(out_b));
-endmodule
+endmodule : bv4_comp_theta
+`endif // BV4_COMP_THETA_SV

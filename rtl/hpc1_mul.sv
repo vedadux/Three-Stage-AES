@@ -1,4 +1,10 @@
-import aes128_package::*;
+`ifndef HPC1_MUL_SV
+`define HPC1_MUL_SV
+
+`include "aes128_package.sv"
+`include "register.sv"
+`include "generic_mul.sv"
+`include "reduce_xor.sv"
 
 module hpc1_mul #(
     parameter NUM_SHARES = 2,
@@ -6,6 +12,7 @@ module hpc1_mul #(
 )(
     in_a, in_b, in_r, in_p, out_c, in_clock, in_reset
 );
+    import aes128_package::*;
     localparam NUM_QUARDATIC = num_quad(NUM_SHARES);
     typedef bit[BIT_WIDTH-1:0] T;
 
@@ -63,4 +70,5 @@ module hpc1_mul #(
             );
         end
     endgenerate
-endmodule
+endmodule : hpc1_mul
+`endif // HPC1_MUL_SV

@@ -1,3 +1,6 @@
+`ifndef REDUCE_XOR_SV
+`define REDUCE_XOR_SV
+
 module reduce_xor #(
     parameter NUM_ELEMENTS = 5,
     parameter ELEMENT_WIDTH = 4
@@ -33,4 +36,5 @@ module reduce_xor #(
             assign out_xor = left ^ right;
         end
     endgenerate
-endmodule
+endmodule : reduce_xor
+`endif // REDUCE_XOR_SV

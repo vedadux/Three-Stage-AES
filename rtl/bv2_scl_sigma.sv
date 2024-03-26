@@ -1,5 +1,5 @@
-`ifndef BV2_SCL_SIGMA
-`define BV2_SCL_SIGMA
+`ifndef BV2_SCL_SIGMA_SV
+`define BV2_SCL_SIGMA_SV
 
 `include "aes128_package.sv"
 
@@ -13,5 +13,5 @@ module bv2_scl_sigma (
 
     assign out_b[0] = in_a[0] ^ in_a[1];
     assign out_b[1] = in_a[0];
-endmodule
-`endif // BV2_SCL_SIGMA
+endmodule : bv2_scl_sigma
+`endif // BV2_SCL_SIGMA_SV

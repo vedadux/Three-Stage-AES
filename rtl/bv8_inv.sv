@@ -1,9 +1,18 @@
-import aes128_package::*;
+`ifndef BV8_INV_SV
+`define BV8_INV_SV
+
+`include "aes128_package.sv"
+`include "bv4_mul.sv"
+`include "bv4_sq_scl_s.sv"
+`include "bv4_pow4.sv"
+`include "bv4_comp_theta.sv"
+`include "bv2_mul.sv"
 
 // Compute GF(2^8) Inverse
 module bv8_inv (
     in_a, out_b
 );
+    import aes128_package::*;
     input  bv8_t in_a;
     output bv8_t out_b;
 
@@ -39,4 +48,5 @@ module bv8_inv (
     endgenerate
 
     assign out_b = mul_theta_out;
-endmodule
+endmodule : bv8_inv
+`endif // BV8_INV_SV

@@ -1,4 +1,9 @@
-import aes128_package::*;
+`ifndef GENERIC_MUL_SV
+`define GENERIC_MUL_SV
+
+`include "aes128_package.sv"
+`include "bv2_mul.sv"
+`include "bv4_mul.sv"
 
 // Multiply input A with input B
 module generic_mul #(
@@ -6,6 +11,7 @@ module generic_mul #(
 )(
     in_a, in_b, out_c
 );
+    import aes128_package::*;
     typedef bit[BIT_WIDTH-1:0] T;
 
     input  T in_a;
@@ -22,4 +28,5 @@ module generic_mul #(
         else
             $error("Unsupported type");
     endgenerate
-endmodule
+endmodule : generic_mul
+`endif // GENERIC_MUL_SV
