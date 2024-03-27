@@ -1,7 +1,19 @@
 #include <verilated.h>
 #include "Vbv8_inv.h"
+#include "gf_operations.h"
 
-int main(int argc, char** argv) {
+#include <iostream>
+#include <cstdio>
+#include <cassert>
+
+int main(int argc, char** argv) 
+{
+    for (uint64_t sbox_in = 0; sbox_in < 256; sbox_in += 1)
+    {
+        uint64_t sbox_out = aes_sbox(sbox_in, gf_256_inv_canright);
+        assert(sbox_out == AES_SBOX_TABLE[sbox_in]);
+    }
+
     // Initialize Verilator
     Verilated::commandArgs(argc, argv);
 
@@ -9,17 +21,21 @@ int main(int argc, char** argv) {
     Vbv8_inv* dut = new Vbv8_inv;
 
     // Test every possible input value for in_a
-    for (int i = 0; i < 256; i++) {
+    for (uint32_t input = 0; input < 256; input++) {
         // Set input value
-        dut->in_a = i;
+        dut->in_a = input;
 
         // Evaluate the DUT
         dut->eval();
 
+        uint32_t expected = gf_256_inv_canright(input);
+        uint32_t output = dut->out_b;
+        
         // Check if the output matches the expected value
-        if (dut->out_b != ~dut->in_a) {
+        if (output != expected)
+        {
             // Test failed
-            printf("Test failed: in_a = %d, expected out_b = %d, actual out_b = %d\n", dut->in_a, ~dut->in_a, dut->out_b);
+            printf("Test failed %x: %x != %x\n", input, output, expected);
             // Exit with failure
             exit(1);
         }

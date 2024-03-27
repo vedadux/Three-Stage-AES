@@ -17,7 +17,7 @@ inline uint64_t extract(uint64_t x, int64_t high, int64_t low)
     assert(low >= 0 && low <= 63);
     assert(high >= low);
 
-    if (low != 0) x >>= (low - 1);
+    x >>= low;
     const uint64_t size = high - low + 1;
     const uint64_t mask = (1LU << size) - 1;
     return x & mask;
