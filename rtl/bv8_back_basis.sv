@@ -3,7 +3,7 @@
 
 `include "aes128_package.sv"
 
-// Compute the basis change in front of AES Sbox
+// Compute the basis change in back of AES Sbox
 module bv8_back_basis (
     in_x, out_fwd, out_bwd
 );

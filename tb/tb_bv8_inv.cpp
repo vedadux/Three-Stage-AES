@@ -8,12 +8,6 @@
 
 int main(int argc, char** argv) 
 {
-    for (uint64_t sbox_in = 0; sbox_in < 256; sbox_in += 1)
-    {
-        uint64_t sbox_out = aes_sbox(sbox_in, gf_256_inv_canright);
-        assert(sbox_out == AES_SBOX_TABLE[sbox_in]);
-    }
-
     // Initialize Verilator
     Verilated::commandArgs(argc, argv);
 

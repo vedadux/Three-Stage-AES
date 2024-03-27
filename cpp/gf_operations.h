@@ -33,6 +33,12 @@ const uint64_t S2X[8] = {0x8C, 0x79, 0x05, 0xEB, 0x12, 0x04, 0x51, 0x53};
 /// @return AES Sbox output
 uint64_t aes_sbox(uint64_t x, uint64_t(*gf_256_inv_fun)(uint64_t));
 
+/// @brief Computes the inverse AES Sbox using GF(256) inversion
+/// @param n Input to the inverse AES Sbox
+/// @param gf_256_inv_fun GF(256) inversion function to use
+/// @return Inverse AES Sbox output
+uint64_t aes_inv_sbox(uint64_t x, uint64_t(*gf_256_inv_fun)(uint64_t));
+
 /// @brief Performs a basis change to \c basis
 /// @param x Number to be transofmed
 /// @param basis Vector of 8 polynomials

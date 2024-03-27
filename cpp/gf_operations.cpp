@@ -136,3 +136,12 @@ uint64_t aes_sbox(uint64_t x, uint64_t(*gf_256_inv_fun)(uint64_t))
     y = gf_256_switch_basis(y, X2S);
     return y ^ 0x63;
 }
+
+uint64_t aes_inv_sbox(uint64_t x, uint64_t(*gf_256_inv_fun)(uint64_t))
+{
+    uint64_t y;
+    y = gf_256_switch_basis(x ^ 0x63, S2X);
+    y = gf_256_inv_fun(y);
+    y = gf_256_switch_basis(y, X2A);
+    return y;
+}
