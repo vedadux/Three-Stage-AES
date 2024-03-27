@@ -29,7 +29,7 @@ int main(int argc, char** argv)
         if (output != expected)
         {
             // Test failed
-            printf("Test failed %x: %x != %x\n", input, output, expected);
+            printf("Test failed %02x: %02x != %02x\n", input, output, expected);
             // Exit with failure
             exit(1);
         }

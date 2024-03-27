@@ -38,7 +38,7 @@ int main(int argc, char** argv)
         if (output != expected)
         {
             // Test failed
-            printf("Forward test failed %x: %x != %x\n", input, output, expected);
+            printf("Forward test failed %02x: %02x != %02x\n", input, output, expected);
             // Exit with failure
             exit(1);
         }
@@ -60,7 +60,7 @@ int main(int argc, char** argv)
         if (output != expected)
         {
             // Test failed
-            printf("Backward test failed %x: %x != %x\n", input, output, expected);
+            printf("Backward test failed %02x: %02x != %02x\n", input, output, expected);
             // Exit with failure
             exit(1);
         }

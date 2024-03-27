@@ -18,7 +18,7 @@ CPP_FILES = $(wildcard $(CPP_DIR)/*.cpp)
 # OBJ_FILES = $(patsubst $(CPP_DIR)/%.cpp, $(OBJ_DIR)/%.o,$(CPP_FILES))
 SIM_FILES = $(patsubst $(SV_DIR)/%.sv, $(OBJ_DIR)/V%,$(SV_FILES))
 
-TOP_MODULE = bv8_front_basis
+TOP_MODULE = bv8_sbox
 OUTPUT_FILE = $(V_DIR)/netlist.v
 
 .PHONY = all sv2v clean test_%
