@@ -1,5 +1,5 @@
 #include <verilated.h>
-#include "Vbv8_front_basis.h"
+#include "Vbv8_back_basis.h"
 #include "gf_operations.h"
 
 #include <iostream>
@@ -12,7 +12,7 @@ int main(int argc, char** argv)
     Verilated::commandArgs(argc, argv);
 
     // Create an instance of the DUT module
-    Vbv8_front_basis* dut = new Vbv8_front_basis;
+    Vbv8_back_basis* dut = new Vbv8_back_basis;
 
     // Test every possible input value for in_a
     for (uint32_t input = 0; input < 256; input++) {
@@ -22,8 +22,8 @@ int main(int argc, char** argv)
         // Evaluate the DUT
         dut->eval();
 
-        uint32_t exp_l = gf_256_switch_basis(input, A2X);
-        uint32_t exp_h = gf_256_switch_basis(input, S2X);
+        uint32_t exp_l = gf_256_switch_basis(input, X2S);
+        uint32_t exp_h = gf_256_switch_basis(input, X2A);
         uint32_t expected = (exp_h << 8) | (exp_l << 0);
         uint32_t out_l = dut->out_fwd;
         uint32_t out_h = dut->out_bwd;
