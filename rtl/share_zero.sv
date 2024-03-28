@@ -1,6 +1,7 @@
 `ifndef SHARE_ZERO_SV
 `define SHARE_ZERO_SV
 
+`include "aes128_package.sv"
 `include "register.sv"
 
 module share_zero #(
@@ -9,10 +10,8 @@ module share_zero #(
 )(
     in_random, out_random, in_clock, in_reset
 );
-    localparam NUM_NEEDED = (NUM_SHARES == 2) ? 1 : (
-                            (NUM_SHARES == 3) ? 2 : (
-                            (NUM_SHARES == 4 || NUM_SHARES == 5) ? NUM_SHARES : 0
-                            ));
+    import aes128_package::*;
+    localparam NUM_NEEDED = num_share_0(NUM_SHARES);
     typedef bit[BIT_WIDTH-1:0] T;
     
     input  T[NUM_NEEDED-1:0] in_random;

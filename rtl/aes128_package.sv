@@ -6,6 +6,17 @@ package aes128_package;
         input int i;
         return i * (i - 1) / 2;
     endfunction
+
+    function automatic int num_share_0;
+        input int i;
+        case(i)
+            2: return 1;
+            3: return 2;
+            4: return 4;
+            5: return 5;
+        endcase
+        $error("Unsupported number of shares");
+    endfunction
     
     function automatic int qindex;
         input int i;
