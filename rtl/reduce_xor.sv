@@ -1,6 +1,8 @@
 `ifndef REDUCE_XOR_SV
 `define REDUCE_XOR_SV
 
+// `define REDUCE_XOR_RECURSIVE
+
 module reduce_xor #(
     parameter NUM_ELEMENTS = 5,
     parameter ELEMENT_WIDTH = 4
@@ -11,7 +13,7 @@ module reduce_xor #(
     
     input  T[NUM_ELEMENTS-1:0] in_elements;
     output T                   out_xor;
-
+    `ifdef REDUCE_XOR_RECURSIVE
     generate
         if (NUM_ELEMENTS == 1)
             assign out_xor = in_elements[0];
@@ -36,5 +38,17 @@ module reduce_xor #(
             assign out_xor = left ^ right;
         end
     endgenerate
+    `else
+    bit[ELEMENT_WIDTH-1:0][NUM_ELEMENTS-1:0] transposed;
+    genvar i, j;
+    generate
+        for (i = 0; i < ELEMENT_WIDTH; i += 1) begin
+            for (j = 0; j < NUM_ELEMENTS; j += 1) begin
+                assign transposed[i][j] = in_elements[j][i];
+            end
+            assign out_xor[i] = ^transposed[i];
+        end
+    endgenerate
+    `endif
 endmodule : reduce_xor
 `endif // REDUCE_XOR_SV

@@ -27,13 +27,27 @@ void reset(T* dut)
     tick(dut);
 }
 
+#ifndef NUM_SHARES
+#define NUM_SHARES 2
+#endif
+
+void set_randoms(std::mt19937_64& gen, uint8_t* ptr, uint64_t size)
+{
+    for (int i = 0; i < size / sizeof(uint8_t); i += 1)
+    {
+        ptr[i] = gen();
+    }
+}
+
 int main(int argc, char** argv) 
 {
+    printf("Num out_shares: %d\n", NUM_SHARES);
     // Initialize Verilator
     Verilated::commandArgs(argc, argv);
 
     // Create an instance of the DUT module
     Vmasked_bv8_inv* dut = new Vmasked_bv8_inv;
+    printf("Sizeof random: %ld", sizeof(dut->in_random));
 
     // Create a randomness source
     std::random_device rd;
@@ -58,23 +72,37 @@ int main(int argc, char** argv)
         // Set input value
         reset(dut);
 
-        dut->in_random = gen();
-        dut->in_a = input;
+        uint8_t in_shares[NUM_SHARES];
+        uint8_t share_xor = 0;
+        for (int i = 0; i < NUM_SHARES - 1; i++)
+        {
+            in_shares[i] = gen() & 0xff;
+            share_xor ^= in_shares[i];
+        }
+        in_shares[NUM_SHARES-1] = share_xor ^ input;
+
+        set_randoms(gen, (uint8_t*)(&(dut->in_random)), sizeof(dut->in_random));
+
+        dut->in_a = 0;
+        for (int i = 0; i < NUM_SHARES; i++)
+        {
+            dut->in_a |= (uint64_t)(in_shares[i]) << (uint64_t)(i*8);
+        }
         dut->eval();
 
         for (int time = 0; time < 3; time++)
         {
-            dut->in_random = gen();
+            set_randoms(gen, (uint8_t*)(&(dut->in_random)), sizeof(dut->in_random));
             dut->eval();
             tick(dut);
         }
         
-        uint32_t shares[2];
+        uint32_t out_shares[NUM_SHARES];
         uint32_t output = 0;
         for (int i = 0; i < 2; i++)
         {
-            shares[i] = ((dut->out_b) >> (8 * i)) & 0xff;
-            output ^= shares[i];
+            out_shares[i] = ((dut->out_b) >> (8 * i)) & 0xff;
+            output ^= out_shares[i];
         }
         
         // Check if the output matches the expected value

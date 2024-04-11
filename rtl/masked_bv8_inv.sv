@@ -2,12 +2,15 @@
 `define MASKED_BV8_INV_SV
 
 `include "aes128_package.sv"
+`include "share_zero.sv"
 `include "split_shared_bv.sv"
-`include "join_shared_bv.sv"
 `include "hpc3_mul.sv"
-`include "hpc1_mul.sv"
 `include "register.sv"
+`include "bv4_sq_scl_s.sv"
+`include "bv4_pow4.sv"
 `include "masked_bv4_comp_theta.sv"
+`include "hpc1_mul.sv"
+`include "join_shared_bv.sv"
 
 // Compute masked GF(2^8) Inverse
 module masked_bv8_inv #(
@@ -18,11 +21,7 @@ module masked_bv8_inv #(
     import aes128_package::*;
     localparam NUM_QUARDATIC = num_quad(NUM_SHARES);
     localparam NUM_SHARE_0 = num_share_0(NUM_SHARES);
-    localparam NUM_RANDOM = 2 * (NUM_QUARDATIC * 4) +
-                            2 * (NUM_QUARDATIC * 2) + 
-                            2 * (NUM_QUARDATIC * 4) + 
-                            1 * (NUM_SHARE_0 * 4) + 
-                            5 * (NUM_QUARDATIC * 2);
+    localparam NUM_RANDOM = num_inv_random(NUM_SHARES);
     genvar i;
 
     input  bv8_t[NUM_SHARES-1:0] in_a;

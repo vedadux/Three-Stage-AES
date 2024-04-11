@@ -18,6 +18,17 @@ package aes128_package;
         $error("Unsupported number of shares");
     endfunction
     
+    function automatic int num_inv_random;
+        input int i;
+        int q = num_quad(i);
+        int r = num_share_0(i);
+        return 2 * (q * 4) +
+               2 * (q * 2) + 
+               2 * (q * 4) + 
+               1 * (r * 4) + 
+               5 * (q * 2);
+    endfunction
+
     function automatic int qindex;
         input int i;
         input int j;
@@ -34,5 +45,6 @@ package aes128_package;
     typedef bit[3:0] bv4_t;
     typedef bit[7:0] bv8_t;
 
+    typedef enum bit[0:0] {DFF, DFF_R} dff_type_t;     
 endpackage : aes128_package
 `endif // AES128_PACKAGE_SV

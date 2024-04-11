@@ -5,50 +5,40 @@ CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -pedantic
 
 SV_DIR = rtl
-V_DIR = tmp
+V_DIR = gen
 TB_DIR = tb
 CPP_DIR = cpp
 OBJ_DIR = obj
+SYN_DIR = syn
 
 SV_PACKAGE = $(SV_DIR)/aes128_package.sv
 SOURCES = $(wildcard $(SV_DIR)/*.sv)
 SV_FILES = $(filter-out $(SV_PACKAGE), $(SOURCES))
 V_FILES = $(patsubst $(SV_DIR)/%.sv, $(V_DIR)/%.v,$(SV_FILES))
 CPP_FILES = $(wildcard $(CPP_DIR)/*.cpp)
-# OBJ_FILES = $(patsubst $(CPP_DIR)/%.cpp, $(OBJ_DIR)/%.o,$(CPP_FILES))
 SIM_FILES = $(patsubst $(SV_DIR)/%.sv, $(OBJ_DIR)/V%,$(SV_FILES))
 
 TOP_MODULE = masked_bv8_inv
-OUTPUT_FILE = $(V_DIR)/netlist.v
+LIBERTY_FILE = stdcells.lib
 
-.PHONY = all sv2v clean test_%
+.PHONY = all sv2v clean test_% syn_%
 
 all: $(OUTPUT_FILE) $(SIM_FILES)
 
-sv2v: $(SV_PACKAGE) $(SV_FILES) tmp
-	$(SV2V) -w $(V_DIR) -I rtl $(SV_PACKAGE) $(SV_FILES)
+$(V_DIR) $(OBJ_DIR) $(SYN_DIR):
+	mkdir -p $@
 
-$(V_FILES): sv2v
-	base="$$(basename -s .v $@)"; \
-	echo "$$base"; \
-	files="$$(find $$V_DIR -name "$$base\_*.v")"; \
-	echo "$$files"; \
-	for file in $$files; do \
-        echo "Processing $$file"; \
-		base2="$$(basename -s .v $$file)"; \
-		if [ ! -e "$@" ] || ! grep -q "$$base2" $@ ; then \
-			echo "\`include \"$$file\"" >> $@ ; \
-		fi \
-    done
-
-tmp:
-	mkdir -p tmp
+.PRECIOUS: $(V_DIR)/%.v
+$(V_DIR)/%.v: $(SV_DIR)/%.sv $(SV_FILES) $(V_DIR)
+	$(SV2V) -I $(SV_DIR) $< > $@
 
 $(OBJ_DIR)/V%: $(SV_DIR)/%.sv $(TB_DIR)/tb_%.cpp $(CPP_FILES)
-	$(VERILATOR) --Mdir $(OBJ_DIR) -CFLAGS -I../cpp -cc -sv -Irtl --exe --build -Wall $^ --top-module $$(basename -s .sv $<)
+	$(VERILATOR) -pvalue+NUM_SHARES=4 --Mdir $(OBJ_DIR) -CFLAGS -I../cpp -cc -sv -Irtl --exe --build -Wall $^ --top-module $$(basename -s .sv $<)
 
-$(OUTPUT_FILE): $(V_FILES)
-	IN_FILES="$(V_FILES)" OUT_FILE="$(OUTPUT_FILE)" TOP_MODULE="$(TOP_MODULE)" $(YOSYS) synth.tcl
+syn_%: $(V_DIR)/%.v $(SYN_DIR)
+	IN_FILES="$<" TOP_MODULE="$$(basename -s .v $<)" OUT_BASE="$(SYN_DIR)/$@" LIBERTY="$(LIBERTY_FILE)" $(YOSYS) synth.tcl
+
+# $(SYN_DIR)/syn_%_pre.v $(SYN_DIR)/syn_%_post.v $(SYN_DIR)/syn_%_pre.json $(SYN_DIR)/syn_%_post.json $(SYN_DIR)/syn_%_stats.json: syn_%
 
 clean:
-	rm -rf $(V_DIR) $(OBJ_DIR)
+	rm -rf $(V_DIR) $(OBJ_DIR) $(SYN_DIR)
