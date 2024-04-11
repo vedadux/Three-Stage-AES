@@ -1,17 +1,17 @@
-`ifndef SHARE_ZERO_SV
-`define SHARE_ZERO_SV
+`ifndef MASKED_ZERO_SV
+`define MASKED_ZERO_SV
 
 `include "aes128_package.sv"
 `include "register.sv"
 
-module share_zero #(
+module masked_zero #(
     parameter NUM_SHARES = 2,
     parameter BIT_WIDTH = 2
 )(
     in_random, out_random, in_clock, in_reset
 );
     import aes128_package::*;
-    localparam NUM_NEEDED = num_share_0(NUM_SHARES);
+    localparam NUM_NEEDED = num_zero_random(NUM_SHARES);
     typedef bit[BIT_WIDTH-1:0] T;
     
     input  T[NUM_NEEDED-1:0] in_random;
@@ -43,5 +43,5 @@ module share_zero #(
         .in_clock(in_clock),
         .in_reset(in_reset)
     );
-endmodule : share_zero
-`endif // SHARE_ZERO_SV
+endmodule : masked_zero
+`endif // MASKED_ZERO_SV

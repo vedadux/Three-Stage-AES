@@ -1,12 +1,12 @@
-`ifndef HPC1_MUL_SV
-`define HPC1_MUL_SV
+`ifndef MASKED_HPC1_MUL_SV
+`define MASKED_HPC1_MUL_SV
 
 `include "aes128_package.sv"
 `include "register.sv"
 `include "generic_mul.sv"
 `include "reduce_xor.sv"
 
-module hpc1_mul #(
+module masked_hpc1_mul #(
     parameter NUM_SHARES = 2,
     parameter BIT_WIDTH = 2
 )(
@@ -70,5 +70,5 @@ module hpc1_mul #(
             );
         end
     endgenerate
-endmodule : hpc1_mul
-`endif // HPC1_MUL_SV
+endmodule : masked_hpc1_mul
+`endif // MASKED_HPC1_MUL_SV

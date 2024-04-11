@@ -2,7 +2,7 @@
 `define TEST_SV
 
 `include "aes128_package.sv"
-`include "hpc3_mul.sv"
+`include "masked_hpc3_mul.sv"
 
 module test #(
     parameter NUM_SHARES = 3,
@@ -27,7 +27,7 @@ module test #(
     input in_reset;
     
     // Multiply B and A
-    hpc3_mul #(
+    masked_hpc3_mul #(
         .NUM_SHARES(NUM_SHARES),
         .BIT_WIDTH(BIT_WIDTH)
     ) mul1 (
@@ -41,7 +41,7 @@ module test #(
     );
 
     // Multiply C and A
-    hpc3_mul #(
+    masked_hpc3_mul #(
         .NUM_SHARES(NUM_SHARES),
         .BIT_WIDTH(BIT_WIDTH)
     ) mul2 (

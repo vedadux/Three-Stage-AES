@@ -41,13 +41,13 @@ void set_randoms(std::mt19937_64& gen, uint8_t* ptr, uint64_t size)
 
 int main(int argc, char** argv) 
 {
-    printf("Num out_shares: %d\n", NUM_SHARES);
+    printf("NUM_SHARES: %d\n", NUM_SHARES);
     // Initialize Verilator
     Verilated::commandArgs(argc, argv);
 
     // Create an instance of the DUT module
     Vmasked_bv8_inv* dut = new Vmasked_bv8_inv;
-    printf("Sizeof random: %ld", sizeof(dut->in_random));
+    printf("Size of in_random: %ld\n", sizeof(dut->in_random));
 
     // Create a randomness source
     std::random_device rd;
@@ -99,7 +99,7 @@ int main(int argc, char** argv)
         
         uint32_t out_shares[NUM_SHARES];
         uint32_t output = 0;
-        for (int i = 0; i < 2; i++)
+        for (int i = 0; i < NUM_SHARES; i++)
         {
             out_shares[i] = ((dut->out_b) >> (8 * i)) & 0xff;
             output ^= out_shares[i];

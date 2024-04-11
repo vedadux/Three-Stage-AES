@@ -1,7 +1,7 @@
-`ifndef JOIN_SHARED_BV_SV
-`define JOIN_SHARED_BV_SV
+`ifndef MASKED_JOIN_BV_SV
+`define MASKED_JOIN_BV_SV
 
-module join_shared_bv #(
+module masked_join_bv #(
     parameter NUM_SHARES = 2,
     parameter HALF_WIDTH = 15
 )(
@@ -19,5 +19,5 @@ module join_shared_bv #(
         end
     endgenerate
 
-endmodule : join_shared_bv
-`endif // JOIN_SHARED_BV_SV
+endmodule : masked_join_bv
+`endif // MASKED_JOIN_BV_SV

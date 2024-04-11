@@ -2,12 +2,17 @@ set IN_FILES       [regexp -all -inline {\S+} $::env(IN_FILES)]
 set TOP_MODULE     $::env(TOP_MODULE)
 set OUT_BASE       $::env(OUT_BASE)
 set LIBERTY        $::env(LIBERTY)
+set NUM_SHARES     $::env(NUM_SHARES)
 
-set VLOG_PRE_MAP   $OUT_BASE\_pre.v
-set VLOG_POST_MAP  $OUT_BASE\_post.v
-set JSON_PRE_MAP   $OUT_BASE\_pre.json
-set JSON_POST_MAP  $OUT_BASE\_post.json
-set JSON_STATS     $OUT_BASE\_stats.json
+if {![string equal "" $NUM_SHARES]} {
+    set NUM_SHARES 2
+}
+
+set VLOG_PRE_MAP   $OUT_BASE\_$NUM_SHARES\_pre.v
+set VLOG_POST_MAP  $OUT_BASE\_$NUM_SHARES\_post.v
+set JSON_PRE_MAP   $OUT_BASE\_$NUM_SHARES\_pre.json
+set JSON_POST_MAP  $OUT_BASE\_$NUM_SHARES\_post.json
+set STATS_FILE     $OUT_BASE\_$NUM_SHARES\_stats.txt
 
 proc get_gates {filename} {
     set file [open $filename r]
@@ -20,7 +25,8 @@ proc get_gates {filename} {
     puts $matches
     foreach match $matches {
         if {[string first "$" $match] == -1 &&
-            [string first "DFF" $match] == -1} {
+            [string first "DFF" $match] == -1 && 
+            [string first "NOT" $match] == -1} {
            lappend result $match
         }
     }
@@ -28,16 +34,17 @@ proc get_gates {filename} {
     return [join $result ","]
 }
 
-
 foreach file $IN_FILES {
     yosys read_verilog -defer $file
 }
 
-yosys chparam -set NUM_SHARES 3 $TOP_MODULE
+puts "NUM_SHARES = $NUM_SHARES"
+yosys chparam -set NUM_SHARES [expr $NUM_SHARES] $TOP_MODULE
+
 yosys synth -top $TOP_MODULE -flatten -noabc
 yosys clean -purge
-yosys tee -o "/tmp/tmp-stats.txt" stat
-set gates [get_gates "/tmp/tmp-stats.txt"]
+yosys tee -o $STATS_FILE stat
+set gates [get_gates $STATS_FILE]
 puts "Gates are $gates"
 yosys abc -g $gates 
 yosys clean -purge
@@ -52,6 +59,4 @@ yosys clean -purge
 
 yosys write_verilog $VLOG_POST_MAP
 yosys write_json    $JSON_POST_MAP
-yosys tee -o $JSON_STATS stat -liberty $LIBERTY
-
-# yosys write_json $JSON_OUT_FILE
+yosys tee -o $STATS_FILE stat -liberty $LIBERTY

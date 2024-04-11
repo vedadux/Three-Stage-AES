@@ -7,7 +7,7 @@ package aes128_package;
         return i * (i - 1) / 2;
     endfunction
 
-    function automatic int num_share_0;
+    function automatic int num_zero_random;
         input int i;
         case(i)
             2: return 1;
@@ -21,7 +21,7 @@ package aes128_package;
     function automatic int num_inv_random;
         input int i;
         int q = num_quad(i);
-        int r = num_share_0(i);
+        int r = num_zero_random(i);
         return 2 * (q * 4) +
                2 * (q * 2) + 
                2 * (q * 4) + 
@@ -34,9 +34,11 @@ package aes128_package;
         input int j;
         input int n;
         begin
-            if (j < i) return (j * (n - (j+1)/2) + i - j - 1);
-            if (i < j) return (i * (n - (i+1)/2) + j - i - 1);
-            $error("Looking up non-existent index");
+            if (i < 0 || i >= n) $error("i must be smaller than n");
+            if (j < 0 || j >= n) $error("j must be smaller than n");
+            if (i == j) $error("i and j must be different");
+            return (j < i) ? (j * (2 * n - (j+1)) / 2 + i - j - 1)
+                           : (i * (2 * n - (i+1)) / 2 + j - i - 1);
         end
     endfunction
 

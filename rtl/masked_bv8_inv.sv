@@ -2,15 +2,15 @@
 `define MASKED_BV8_INV_SV
 
 `include "aes128_package.sv"
-`include "share_zero.sv"
-`include "split_shared_bv.sv"
-`include "hpc3_mul.sv"
+`include "masked_zero.sv"
+`include "masked_split_bv.sv"
+`include "masked_hpc3_mul.sv"
 `include "register.sv"
 `include "bv4_sq_scl_s.sv"
 `include "bv4_pow4.sv"
 `include "masked_bv4_comp_theta.sv"
-`include "hpc1_mul.sv"
-`include "join_shared_bv.sv"
+`include "masked_hpc1_mul.sv"
+`include "masked_join_bv.sv"
 
 // Compute masked GF(2^8) Inverse
 module masked_bv8_inv #(
@@ -20,7 +20,7 @@ module masked_bv8_inv #(
 );
     import aes128_package::*;
     localparam NUM_QUARDATIC = num_quad(NUM_SHARES);
-    localparam NUM_SHARE_0 = num_share_0(NUM_SHARES);
+    localparam NUM_ZERO_RANDOM = num_zero_random(NUM_SHARES);
     localparam NUM_RANDOM = num_inv_random(NUM_SHARES);
     genvar i;
 
@@ -35,14 +35,14 @@ module masked_bv8_inv #(
     bv2_t[NUM_QUARDATIC-1:0][1:0] theta_random;
     bv4_t[NUM_QUARDATIC-1:0] right_p;
     bv4_t[NUM_QUARDATIC-1:0] left_p;
-    bv4_t[NUM_SHARE_0-1:0]   left_r_raw;
+    bv4_t[NUM_ZERO_RANDOM-1:0]   left_r_raw;
     bv2_t[NUM_QUARDATIC-1:0] back_r;
     bv2_t[3:0][NUM_QUARDATIC-1:0] back_ps;
 
     assign {front_r, front_p, theta_random, right_p, left_p, left_r_raw, back_r, back_ps} = in_random;
 
     bv4_t[NUM_SHARES-1:0] left_r;
-    share_zero #(
+    masked_zero #(
         .NUM_SHARES(NUM_SHARES), 
         .BIT_WIDTH(4)
     ) left_share_0 (
@@ -53,7 +53,7 @@ module masked_bv8_inv #(
     );
 
     bv4_t[1:0][NUM_SHARES-1:0] a_t0;
-    split_shared_bv #(
+    masked_split_bv #(
         .NUM_SHARES(NUM_SHARES),
         .HALF_WIDTH(4)
     ) split_a_t0 (
@@ -62,7 +62,7 @@ module masked_bv8_inv #(
     );
 
     bv4_t[NUM_SHARES-1:0] a_mul_t1, a_xor_t1;
-    hpc3_mul #(
+    masked_hpc3_mul #(
         .NUM_SHARES(NUM_SHARES), 
         .BIT_WIDTH(4)) 
         mul_front (
@@ -115,7 +115,7 @@ module masked_bv8_inv #(
     
     bv4_t[NUM_SHARES-1:0] mul_a0_t2, mul_a1_t2;
 
-    hpc1_mul #(
+    masked_hpc1_mul #(
         .NUM_SHARES(NUM_SHARES), 
         .BIT_WIDTH(4)
     ) mul_left (
@@ -128,7 +128,7 @@ module masked_bv8_inv #(
         .in_reset(in_reset)
         );
     
-    hpc3_mul #(
+    masked_hpc3_mul #(
         .NUM_SHARES(NUM_SHARES), 
         .BIT_WIDTH(4)
     ) mul_right (
@@ -143,7 +143,7 @@ module masked_bv8_inv #(
     
     bv2_t[1:0][NUM_SHARES-1:0] mul_a0_split_t2, mul_a1_split_t2;
     
-    split_shared_bv #(
+    masked_split_bv #(
         .NUM_SHARES(NUM_SHARES),
         .HALF_WIDTH(2)
     ) split_a0_t2 (
@@ -151,7 +151,7 @@ module masked_bv8_inv #(
         .out_b(mul_a0_split_t2)
     );
     
-    split_shared_bv #(
+    masked_split_bv #(
         .NUM_SHARES(NUM_SHARES),
         .HALF_WIDTH(2)
     ) split_a1_t2 (
@@ -165,7 +165,7 @@ module masked_bv8_inv #(
 
     generate
         for (i = 0; i < 4; i += 1)
-            hpc3_mul #(
+            masked_hpc3_mul #(
                 .NUM_SHARES(NUM_SHARES),
                 .BIT_WIDTH(2)
             ) mul_back_i (
@@ -183,7 +183,7 @@ module masked_bv8_inv #(
 
     generate
         for (i = 0; i < 2; i++)
-            join_shared_bv #(
+            masked_join_bv #(
                 .NUM_SHARES(NUM_SHARES),
                 .HALF_WIDTH(2)
             ) join_back_i (
@@ -192,7 +192,7 @@ module masked_bv8_inv #(
             );
     endgenerate
 
-    join_shared_bv #(
+    masked_join_bv #(
         .NUM_SHARES(NUM_SHARES),
         .HALF_WIDTH(4)
     ) join_back_i (

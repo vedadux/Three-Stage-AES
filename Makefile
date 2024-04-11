@@ -2,7 +2,6 @@ SV2V = sv2v
 YOSYS = yosys
 VERILATOR = verilator
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -pedantic
 
 SV_DIR = rtl
 V_DIR = gen
@@ -10,6 +9,8 @@ TB_DIR = tb
 CPP_DIR = cpp
 OBJ_DIR = obj
 SYN_DIR = syn
+
+VERILATOR_FLAGS = --Mdir $(OBJ_DIR) -CFLAGS -I$(shell pwd)/$(CPP_DIR) -cc -sv -I$(SV_DIR) --exe --build -Wall
 
 SV_PACKAGE = $(SV_DIR)/aes128_package.sv
 SOURCES = $(wildcard $(SV_DIR)/*.sv)
@@ -19,6 +20,7 @@ CPP_FILES = $(wildcard $(CPP_DIR)/*.cpp)
 SIM_FILES = $(patsubst $(SV_DIR)/%.sv, $(OBJ_DIR)/V%,$(SV_FILES))
 
 TOP_MODULE = masked_bv8_inv
+NUM_SHARES ?= 5
 LIBERTY_FILE = stdcells.lib
 
 .PHONY = all sv2v clean test_% syn_%
@@ -28,15 +30,18 @@ all: $(OUTPUT_FILE) $(SIM_FILES)
 $(V_DIR) $(OBJ_DIR) $(SYN_DIR):
 	mkdir -p $@
 
-.PRECIOUS: $(V_DIR)/%.v
+# .PRECIOUS: $(V_DIR)/%.v
 $(V_DIR)/%.v: $(SV_DIR)/%.sv $(SV_FILES) $(V_DIR)
 	$(SV2V) -I $(SV_DIR) $< > $@
 
-$(OBJ_DIR)/V%: $(SV_DIR)/%.sv $(TB_DIR)/tb_%.cpp $(CPP_FILES)
-	$(VERILATOR) -pvalue+NUM_SHARES=4 --Mdir $(OBJ_DIR) -CFLAGS -I../cpp -cc -sv -Irtl --exe --build -Wall $^ --top-module $$(basename -s .sv $<)
+$(OBJ_DIR)/Vmasked%: VERILATOR_DEFINES = -pvalue+NUM_SHARES=$(NUM_SHARES) -CFLAGS -DNUM_SHARES=$(NUM_SHARES)
 
+$(OBJ_DIR)/V%: $(SV_DIR)/%.sv $(TB_DIR)/tb_%.cpp $(CPP_FILES)
+	$(VERILATOR) $(VERILATOR_DEFINES) $(VERILATOR_FLAGS) $^ --top-module $$(basename -s .sv $<)
+
+syn_masked%: YOSYS_DEFINES = NUM_SHARES=$(NUM_SHARES)
 syn_%: $(V_DIR)/%.v $(SYN_DIR)
-	IN_FILES="$<" TOP_MODULE="$$(basename -s .v $<)" OUT_BASE="$(SYN_DIR)/$@" LIBERTY="$(LIBERTY_FILE)" $(YOSYS) synth.tcl
+	$(YOSYS_DEFINES) IN_FILES="$<" TOP_MODULE="$$(basename -s .v $<)" OUT_BASE="$(SYN_DIR)/$@" LIBERTY="$(LIBERTY_FILE)" $(YOSYS) synth.tcl
 
 # $(SYN_DIR)/syn_%_pre.v $(SYN_DIR)/syn_%_post.v $(SYN_DIR)/syn_%_pre.json $(SYN_DIR)/syn_%_post.json $(SYN_DIR)/syn_%_stats.json: syn_%
 

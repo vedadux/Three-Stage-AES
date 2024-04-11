@@ -27,25 +27,11 @@ const uint64_t X2A[8] = {0x64, 0x78, 0x6E, 0x8C, 0x68, 0x29, 0xDE, 0x60};
 const uint64_t X2S[8] = {0x58, 0x2D, 0x9E, 0x0B, 0xDC, 0x04, 0x03, 0x24};
 const uint64_t S2X[8] = {0x8C, 0x79, 0x05, 0xEB, 0x12, 0x04, 0x51, 0x53};
 
-/// @brief Computes the AES Sbox using GF(256) inversion
-/// @param n Input to the AES Sbox
-/// @param gf_256_inv_fun GF(256) inversion function to use
-/// @return AES Sbox output
-uint64_t aes_sbox(uint64_t x, uint64_t(*gf_256_inv_fun)(uint64_t));
-
-/// @brief Computes the inverse AES Sbox using GF(256) inversion
-/// @param n Input to the inverse AES Sbox
-/// @param gf_256_inv_fun GF(256) inversion function to use
-/// @return Inverse AES Sbox output
-uint64_t aes_inv_sbox(uint64_t x, uint64_t(*gf_256_inv_fun)(uint64_t));
-
 /// @brief Performs a basis change to \c basis
 /// @param x Number to be transofmed
 /// @param basis Vector of 8 polynomials
 /// @return \c x in the new basis
 uint64_t gf_256_switch_basis(uint64_t x, const uint64_t* basis);
-
-uint64_t gf_256_inv_hadzic(uint64_t x);
 
 /// @brief Computes the inverse in GF(256) in normal GF(256) basis (Y^16, Y)
 /// @param x Number to be inverted
@@ -88,5 +74,17 @@ uint64_t gf_4_scl_sigma(uint64_t x);
 /// @param y Second multiplicand
 /// @return Product of multiplication
 uint64_t gf_4_mul(uint64_t x, uint64_t y);
+
+/// @brief Computes the AES Sbox using GF(256) inversion
+/// @param n Input to the AES Sbox
+/// @param gf_256_inv_fun GF(256) inversion function to use
+/// @return AES Sbox output
+uint64_t aes_sbox(uint64_t x, uint64_t(*gf_256_inv_fun)(uint64_t) = gf_256_inv_canright);
+
+/// @brief Computes the inverse AES Sbox using GF(256) inversion
+/// @param n Input to the inverse AES Sbox
+/// @param gf_256_inv_fun GF(256) inversion function to use
+/// @return Inverse AES Sbox output
+uint64_t aes_inv_sbox(uint64_t x, uint64_t(*gf_256_inv_fun)(uint64_t) = gf_256_inv_canright);
 
 #endif // GF_OPERATIONS_H

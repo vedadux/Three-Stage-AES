@@ -1,7 +1,7 @@
-`ifndef SPLIT_SHARED_BV_SV
-`define SPLIT_SHARED_BV_SV
+`ifndef MASKED_SPLIT_BV_SV
+`define MASKED_SPLIT_BV_SV
 
-module split_shared_bv #(
+module masked_split_bv #(
     parameter NUM_SHARES = 2,
     parameter HALF_WIDTH = 15
 )(
@@ -20,5 +20,5 @@ module split_shared_bv #(
         end
     endgenerate
 
-endmodule : split_shared_bv
-`endif // SPLIT_SHARED_BV_SV
+endmodule : masked_split_bv
+`endif // MASKED_SPLIT_BV_SV
