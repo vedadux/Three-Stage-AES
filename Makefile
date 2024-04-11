@@ -11,6 +11,7 @@ OBJ_DIR = obj
 SYN_DIR = syn
 
 VERILATOR_FLAGS = --Mdir $(OBJ_DIR) -CFLAGS -I$(shell pwd)/$(CPP_DIR) -cc -sv -I$(SV_DIR) --exe --build -Wall
+YOSYS_LOG_SUFFIX = __log.txt
 
 SV_PACKAGE = $(SV_DIR)/aes128_package.sv
 SOURCES = $(wildcard $(SV_DIR)/*.sv)
@@ -20,7 +21,7 @@ CPP_FILES = $(wildcard $(CPP_DIR)/*.cpp)
 SIM_FILES = $(patsubst $(SV_DIR)/%.sv, $(OBJ_DIR)/V%,$(SV_FILES))
 
 TOP_MODULE = masked_bv8_inv
-NUM_SHARES ?= 5
+NUM_SHARES ?= 2
 LIBERTY_FILE = stdcells.lib
 
 .PHONY = all sv2v clean test_% syn_%
@@ -40,8 +41,9 @@ $(OBJ_DIR)/V%: $(SV_DIR)/%.sv $(TB_DIR)/tb_%.cpp $(CPP_FILES)
 	$(VERILATOR) $(VERILATOR_DEFINES) $(VERILATOR_FLAGS) $^ --top-module $$(basename -s .sv $<)
 
 syn_masked%: YOSYS_DEFINES = NUM_SHARES=$(NUM_SHARES)
+syn_masked%: YOSYS_LOG_SUFFIX = $(NUM_SHARES)_log.txt
 syn_%: $(V_DIR)/%.v $(SYN_DIR)
-	$(YOSYS_DEFINES) IN_FILES="$<" TOP_MODULE="$$(basename -s .v $<)" OUT_BASE="$(SYN_DIR)/$@" LIBERTY="$(LIBERTY_FILE)" $(YOSYS) synth.tcl
+	$(YOSYS_DEFINES) IN_FILES="$<" TOP_MODULE="$$(basename -s .v $<)" OUT_BASE="$(SYN_DIR)/$@" LIBERTY="$(LIBERTY_FILE)" $(YOSYS) synth.tcl -t -l "$(SYN_DIR)/$@_$(YOSYS_LOG_SUFFIX)"
 
 # $(SYN_DIR)/syn_%_pre.v $(SYN_DIR)/syn_%_post.v $(SYN_DIR)/syn_%_pre.json $(SYN_DIR)/syn_%_post.json $(SYN_DIR)/syn_%_stats.json: syn_%
 

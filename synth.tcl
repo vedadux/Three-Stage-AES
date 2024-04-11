@@ -4,10 +4,6 @@ set OUT_BASE       $::env(OUT_BASE)
 set LIBERTY        $::env(LIBERTY)
 set NUM_SHARES     $::env(NUM_SHARES)
 
-if {![string equal "" $NUM_SHARES]} {
-    set NUM_SHARES 2
-}
-
 set VLOG_PRE_MAP   $OUT_BASE\_$NUM_SHARES\_pre.v
 set VLOG_POST_MAP  $OUT_BASE\_$NUM_SHARES\_post.v
 set JSON_PRE_MAP   $OUT_BASE\_$NUM_SHARES\_pre.json
@@ -38,14 +34,16 @@ foreach file $IN_FILES {
     yosys read_verilog -defer $file
 }
 
-puts "NUM_SHARES = $NUM_SHARES"
-yosys chparam -set NUM_SHARES [expr $NUM_SHARES] $TOP_MODULE
+yosys log "NUM_SHARES = $NUM_SHARES"
+if {![string equal "" $NUM_SHARES]} {
+    yosys chparam -set NUM_SHARES [expr $NUM_SHARES] $TOP_MODULE
+}
 
 yosys synth -top $TOP_MODULE -flatten -noabc
 yosys clean -purge
 yosys tee -o $STATS_FILE stat
 set gates [get_gates $STATS_FILE]
-puts "Gates are $gates"
+yosys log "Gates are $gates"
 yosys abc -g $gates 
 yosys clean -purge
 yosys stat
