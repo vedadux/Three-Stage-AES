@@ -40,12 +40,13 @@ if {![string equal "" $NUM_SHARES]} {
 }
 
 yosys synth -top $TOP_MODULE -flatten -noabc
-yosys clean -purge
+# yosys clean -purge
 yosys tee -o $STATS_FILE stat
 set gates [get_gates $STATS_FILE]
 yosys log "Gates are $gates"
-yosys abc -g $gates 
-yosys clean -purge
+yosys abc -g $gates
+yosys clean
+# yosys clean -purge
 yosys stat
 
 yosys write_verilog $VLOG_PRE_MAP

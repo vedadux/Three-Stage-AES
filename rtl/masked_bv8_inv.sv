@@ -10,6 +10,7 @@
 `include "bv4_pow4.sv"
 `include "masked_bv4_comp_theta.sv"
 `include "masked_hpc1_mul.sv"
+`include "masked_hpc3_mul_skewed.sv"
 `include "masked_join_bv.sv"
 
 // Compute masked GF(2^8) Inverse
@@ -128,12 +129,13 @@ module masked_bv8_inv #(
         .in_reset(in_reset)
         );
     
-    masked_hpc3_mul #(
+    masked_hpc3_mul_skewed #(
         .NUM_SHARES(NUM_SHARES), 
-        .BIT_WIDTH(4)
+        .BIT_WIDTH(4),
+        .DELAY_BR(1)
     ) mul_right (
         .in_a(pow4_out_t1), 
-        .in_b(a_t1[1]),
+        .in_b(a_t0[1]), // use original timing with built-in delay
         .in_r(front_r),
         .in_p(right_p),
         .out_c(mul_a1_t2),
