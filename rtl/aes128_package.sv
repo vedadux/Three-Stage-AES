@@ -22,11 +22,14 @@ package aes128_package;
         input int i;
         int q = num_quad(i);
         int r = num_zero_random(i);
-        return 2 * (q * 4) +
-               2 * (q * 2) + 
-               2 * (q * 4) + 
-               1 * (r * 4) + 
-               5 * (q * 2);
+        return 2 * (q * 4) + // front_r and front_p
+               2 * (q * 2) + // theta_random
+               1 * (r * 4) + // right_r_raw
+               1 * (q * 4) + // right_p
+               1 * (r * 4) + // left_r_raw
+               1 * (q * 4) + // left_p
+               1 * (q * 2) + // back_r
+               4 * (q * 2);  // back_ps
     endfunction
 
     function automatic int qindex;

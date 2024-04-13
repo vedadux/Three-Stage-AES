@@ -1,0 +1,7 @@
+{
+    "in_a" : {"type": "S", "len": 8},
+    "in_random" : {"type": "M", "len": "?"}, 
+    "out_b": {"type": "O", "len": 8}, 
+    "in_clock": {"type": 1, "len": 1},
+    "in_reset": {"type": 0, "len": 1}
+}

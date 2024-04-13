@@ -31,24 +31,36 @@ module masked_bv8_inv #(
     input                    bit in_clock;
     input                    bit in_reset;
 
-    bv4_t[NUM_QUARDATIC-1:0] front_r;
-    bv4_t[NUM_QUARDATIC-1:0] front_p;
+    bv4_t[NUM_QUARDATIC-1:0]      front_r;
+    bv4_t[NUM_QUARDATIC-1:0]      front_p;
     bv2_t[NUM_QUARDATIC-1:0][1:0] theta_random;
-    bv4_t[NUM_QUARDATIC-1:0] right_p;
-    bv4_t[NUM_QUARDATIC-1:0] left_p;
-    bv4_t[NUM_ZERO_RANDOM-1:0]   left_r_raw;
-    bv2_t[NUM_QUARDATIC-1:0] back_r;
+    bv4_t[NUM_ZERO_RANDOM-1:0]    right_r_raw;
+    bv4_t[NUM_QUARDATIC-1:0]      right_p;
+    bv4_t[NUM_ZERO_RANDOM-1:0]    left_r_raw;
+    bv4_t[NUM_QUARDATIC-1:0]      left_p;
+    bv2_t[NUM_QUARDATIC-1:0]      back_r;
     bv2_t[3:0][NUM_QUARDATIC-1:0] back_ps;
 
-    assign {front_r, front_p, theta_random, right_p, left_p, left_r_raw, back_r, back_ps} = in_random;
-
+    assign {back_ps, back_r, left_p, left_r_raw, right_p, right_r_raw, theta_random, front_p, front_r} = in_random;
+    
     bv4_t[NUM_SHARES-1:0] left_r;
     masked_zero #(
         .NUM_SHARES(NUM_SHARES), 
         .BIT_WIDTH(4)
-    ) left_share_0 (
+    ) left_shared_0 (
         .in_random(left_r_raw),
         .out_random(left_r),
+        .in_clock(in_clock),
+        .in_reset(in_reset)
+    );
+
+    bv4_t[NUM_SHARES-1:0] right_r;
+    masked_zero #(
+        .NUM_SHARES(NUM_SHARES), 
+        .BIT_WIDTH(4)
+    ) right_shared_0 (
+        .in_random(right_r_raw),
+        .out_random(right_r),
         .in_clock(in_clock),
         .in_reset(in_reset)
     );
@@ -120,29 +132,28 @@ module masked_bv8_inv #(
         .NUM_SHARES(NUM_SHARES), 
         .BIT_WIDTH(4)
     ) mul_left (
-        .in_a(a_t0[0]), 
-        .in_b(pow4_out_t1),
+        .in_a(pow4_out_t1), 
+        .in_b(a_t0[0]),
         .in_r(left_r),
         .in_p(left_p), 
         .out_c(mul_a0_t2),
         .in_clock(in_clock),
         .in_reset(in_reset)
-        );
+    );
     
-    masked_hpc3_mul_skewed #(
+    masked_hpc1_mul #(
         .NUM_SHARES(NUM_SHARES), 
-        .BIT_WIDTH(4),
-        .DELAY_BR(1)
+        .BIT_WIDTH(4)
     ) mul_right (
         .in_a(pow4_out_t1), 
-        .in_b(a_t0[1]), // use original timing with built-in delay
-        .in_r(front_r),
-        .in_p(right_p),
+        .in_b(a_t0[1]),
+        .in_r(right_r),
+        .in_p(right_p), 
         .out_c(mul_a1_t2),
         .in_clock(in_clock),
         .in_reset(in_reset)
     );
-    
+
     bv2_t[1:0][NUM_SHARES-1:0] mul_a0_split_t2, mul_a1_split_t2;
     
     masked_split_bv #(

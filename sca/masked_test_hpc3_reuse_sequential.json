@@ -1,0 +1,11 @@
+{
+    "in_a" : {"type": "S", "len": 1},
+    "in_b" : {"type": "S", "len": 1},
+    "in_r_ab" : {"type": "M", "len": "?"}, 
+    "in_p_ab" : {"type": "M", "len": "?"}, 
+    "in_p_cb" : {"type": "M", "len": "?"}, 
+    "out_c": {"type": "O", "len": 1}, 
+    "out_d": {"type": "O", "len": 1}, 
+    "in_clock": {"type": 1, "len": 1},
+    "in_reset": {"type": 0, "len": 1}
+}

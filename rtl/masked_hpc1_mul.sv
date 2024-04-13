@@ -8,7 +8,7 @@
 
 module masked_hpc1_mul #(
     parameter NUM_SHARES = 2,
-    parameter BIT_WIDTH = 2
+    parameter BIT_WIDTH = 1
 )(
     in_a, in_b, in_r, in_p, out_c, in_clock, in_reset
 );
@@ -24,14 +24,14 @@ module masked_hpc1_mul #(
     input in_clock;
     input in_reset;
 
-    // reshare input in_a first
-    T[NUM_SHARES-1:0] reg_ref_a_d;
-    T[NUM_SHARES-1:0] reg_ref_a_q;
+    // reshare input in_b first
+    T[NUM_SHARES-1:0] reg_ref_b_d;
+    T[NUM_SHARES-1:0] reg_ref_b_q;
 
-    assign reg_ref_a_d = in_a ^ in_r;
+    assign reg_ref_b_d = in_b ^ in_r;
     register #(.T(T[NUM_SHARES-1:0])) reg_ref_a (
-        .in_value(reg_ref_a_d),
-        .out_value(reg_ref_a_q),
+        .in_value(reg_ref_b_d),
+        .out_value(reg_ref_b_q),
         .in_clock(in_clock),
         .in_reset(in_reset)
     );
@@ -48,8 +48,8 @@ module masked_hpc1_mul #(
             for (j = 0; j < NUM_SHARES; j++)
             begin
                 generic_mul #(.BIT_WIDTH(BIT_WIDTH)) gen_mul_ij(
-                    .in_a(reg_ref_a_q[i]), 
-                    .in_b(in_b[j]), 
+                    .in_a(in_a[i]), 
+                    .in_b(reg_ref_b_q[j]), 
                     .out_c(cross_mul[i][j])
                 );
                 if (i == j) assign c_array_d[i][j] = cross_mul[i][j];

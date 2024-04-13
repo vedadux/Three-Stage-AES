@@ -1,5 +1,5 @@
 import json
-from verif_msi import *
+import functools
 import argparse
 
 NUM_SHARES = 0
@@ -11,35 +11,54 @@ CELLS_INFO = {
     "$_DFF_P_": {"ins": ["D"], "out": "Q"},
 }
 
+LINES = []
+
+NUM_IDS = 0
+def get_id():
+    global NUM_IDS
+    NUM_IDS += 1
+    return NUM_IDS - 1
+
+def gate(op, *args):
+    global LINES
+    c = get_id()
+    assert(all(map(lambda x: type(x) is int, args)))
+    LINES.append(op + " " + " ".join(map(str, args)))
+    return c
+
 def and_impl(a, b):
-    a_int, b_int = (type(a) is int), (type(b) is int)
-    if a_int and b_int:
-        return a & b
-    elif a_int:
-        return b if a else 0
-    elif b_int:
-        return a if b else 0
-    return andGate(a, b)
+    a_str, b_str = (type(a) is str), (type(b) is str)
+    if a_str and b_str:
+        return str(int(a) & int(b))
+    elif a_str:
+        return b if int(a) else "0"
+    elif b_str:
+        return a if int(b) else "0"
+    return gate("and", a, b)
 
 def not_impl(a):
-    if type(a) is int: 
-        return 1 - a
-    return notGate(a)
+    if type(a) is str: 
+        return str(1 - int(a))
+    return gate("not", a)
 
 def xor_impl(a, b):
-    a_int, b_int = (type(a) is int), (type(b) is int)
-    if a_int and b_int:
-        return a ^ b
-    elif a_int:
-        return not_impl(b) if a else b
-    elif b_int:
-        return not_impl(a) if b else a
-    return xorGate(a, b)
+    a_str, b_str = (type(a) is str), (type(b) is str)
+    if a_str and b_str:
+        return str(int(a) ^ int(b))
+    elif a_str:
+        return not_impl(b) if int(a) else b
+    elif b_str:
+        return not_impl(a) if int(b) else a
+    return gate("xor", a, b)
 
 def dff_impl(d):
-    if type(d) is int:
+    if type(d) is str:
         return d
-    return Register(d)
+    return gate("reg", d)
+
+def out_impl(val, idx):
+    global LINES
+    LINES.append(f"out {val} 0_{idx}")
 
 def evaluate(bit, bit_defines, symbol_table):
     if bit in symbol_table:
@@ -63,12 +82,7 @@ def parse_module(circuit_path):
     modules = data["modules"]
     assert(len(modules) != 0)
     module_name = list(modules.keys())[0]
-    module = modules[module_name]
-    return module
-
-def parse_spec(spec_path):
-    with open(spec_path, "r") as f:
-        return json.load(f)
+    return modules[module_name]
 
 def get_bit_names(module):
     bit_names = {}
@@ -95,13 +109,31 @@ def get_bit_defines(module):
         bit_defines[out_bit] = (cell_type, in_bits)
     return bit_defines
 
+def parse_spec(spec_path):
+    with open(spec_path, "r") as f:
+        return json.load(f)
+
 def set_num_shares(num_shares):
     global NUM_SHARES
     if NUM_SHARES == 0:
         NUM_SHARES = num_shares
     assert(NUM_SHARES == num_shares)
 
+def get_sharing(secret, num_shares):
+    global LINES
+    shares = [get_id() for i in range(num_shares)]
+    for idx, sh in enumerate(shares):
+        LINES.append(f"in {sh} {secret}{idx}")
+    return shares
+
+def get_random():
+    global LINES
+    idx = get_id()
+    LINES.append(f"ref {idx}")
+    return idx
+
 def execute_circuit(ports, bit_defines, bit_names, spec):
+    global LINES
     secrets = {}
     masks = {}
     outputs = []
@@ -118,25 +150,29 @@ def execute_circuit(ports, bit_defines, bit_names, spec):
             for i in range(num_secrets):
                 positions = [j for j in range(i, len(bits), num_secrets)]
                 assert(len(positions) == num_shares), f"{positions}"
-                secret = symbol(f"s_{len(secrets)}", "S", 1)
+                secret = f"{len(secrets)}_"
                 secrets[(port_id, i)] = secret
-                shares = getRealShares(secret, num_shares)
+                shares = get_sharing(secret, num_shares)
                 for p, sh in zip(positions, shares):
-                    print(f"Adding {port_id}[{p}] with bit {bits[p]}: {sh}")
-                    symbol_table[bits[p]] = inputGate(sh)
-        elif port_spec["type"] == "M":
-            assert(port_info["direction"] == "input")
+                    symbol_table[bits[p]] = sh
+
+    for port_id, port_info in ports.items():    
+        port_spec = spec[port_id]
+        bits = port_info["bits"]
+        if port_spec["type"] == "M":
+            assert(port_info["direction"] == "input"), port_info
             assert(port_spec["len"] == "?" or port_spec["len"] == len(bits))
             for idx, bit in enumerate(bits):
-                mask = symbol(f"m_{len(masks)}", "M", 1)
+                mask = get_random()
                 masks[(port_id, idx)] = mask
-                symbol_table[bit] = inputGate(mask)
+                symbol_table[bit] = mask
         elif type(port_spec["type"]) is int:
-            assert(port_info["direction"] == "input")
+            assert(port_info["direction"] == "input"), f"{port_id}: {port_info}"
             value = port_spec["type"]
             assert(port_spec["len"] == len(bits))
             for idx, bit in enumerate(bits):
-                symbol_table[bit] = (value >> idx) & 1
+                symbol_table[bit] = str((value >> idx) & 1)
+
     for port_id, port_info in ports.items():
         port_spec = spec[port_id]
         bits = port_info["bits"]
@@ -151,8 +187,21 @@ def execute_circuit(ports, bit_defines, bit_names, spec):
                 share_bits = []
                 shares = [evaluate(bits[p], bit_defines, symbol_table) for p in positions]
                 outputs.append(tuple(shares))
-    inverse_symbol_table = {sym.num: idx for idx, sym in symbol_table.items() if type(sym) is not int}
-    return outputs, inverse_symbol_table
+
+    inverse_symbol_table = {sym: idx for idx, sym in symbol_table.items() if type(sym) is not str}
+
+    LINES = [(l + " #").ljust(15, " ") + f"{bit_names[inverse_symbol_table[i]][0]}"
+        for i,l in enumerate(LINES)]
+
+    final_outs = []
+    for i in range(NUM_SHARES):
+        dom_out = [out[i] for out in outputs]
+        dom_out = functools.reduce(lambda a, b: gate("and", a, b), dom_out)
+        final_outs.append(dom_out)
+    for i, o in enumerate(final_outs):
+        out_impl(o, i)
+    
+    print("\n".join(LINES))
 
 def get_args():
     parser = argparse.ArgumentParser(description="Encode a circuit for SILVER.")
@@ -161,18 +210,6 @@ def get_args():
 
     return parser.parse_args()
 
-def verify_circuit(outputs, inverse_symbol_table):
-    AMOUNT_LEAKS = 100
-    GLITCHES = True
-    order = 1
-    while order <= NUM_SHARES - 1:
-        tups = checkSecurity(order, GLITCHES, "pini", *outputs)
-        if tups[0] != 0: 
-            print(tups)
-            for t in tups[2]:
-                print([bit_names[inverse_symbol_table[ti]][0] for ti in t])
-            break
-        order += 1
 
 if __name__ == "__main__":
     args = get_args()
@@ -180,5 +217,4 @@ if __name__ == "__main__":
     spec = parse_spec(args.spec)
     bit_names = get_bit_names(module)
     bit_defines = get_bit_defines(module)
-    outputs, inverse_symbol_table = execute_circuit(module["ports"], bit_defines, bit_names, spec)
-    verify_circuit(outputs, inverse_symbol_table)
+    execute_circuit(module["ports"], bit_defines, bit_names, spec)
