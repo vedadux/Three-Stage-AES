@@ -7,7 +7,7 @@
 
 // Compute second stage of masked GF(2^8) Inverse
 module masked_bv8_inv_stage2_hpc3 (
-    in_a0_t0, in_a1_t0, in_pow4_t1, in_random, out_theta_t2, out_mul_a0_t2, out_mul_a1_t2, in_clock, in_reset
+    in_a0_t1, in_a1_t1, in_pow4_t1, in_random, out_theta_t2, out_mul_a0_t2, out_mul_a1_t2, in_clock, in_reset
 );
     import aes128_package::*;
     parameter NUM_SHARES = 2;
@@ -29,47 +29,23 @@ module masked_bv8_inv_stage2_hpc3 (
     bv4_t[NUM_QUARDATIC-1:0] right_p;
     bv4_t[NUM_QUARDATIC-1:0] left_p;
     
-    generate
-        if (NUM_SHARES == 2) begin
-            bv4_t[NUM_ZERO_RANDOM-1:0] joint_r_raw;
-            bv4_t[NUM_SHARES-1:0]      joint_r;
-            assign {joint_r_raw, left_p, right_p, theta_random} = in_random;
-            masked_zero #(
-                .NUM_SHARES(NUM_SHARES), 
-                .BIT_WIDTH(4)
-            ) joint_shared_0 (
-                .in_random(joint_r_raw),
-                .out_random(joint_r),
-                .in_clock(in_clock),
-                .in_reset(in_reset)
-            );
-            assign left_r = joint_r;
-            assign right_r = joint_r;
-        end else begin
-            bv4_t[NUM_ZERO_RANDOM-1:0]    right_r_raw;
-            bv4_t[NUM_ZERO_RANDOM-1:0]    left_r_raw;
-            assign {left_r_raw, right_r_raw, left_p, right_p, theta_random} = in_random;
-            masked_zero #(
-                .NUM_SHARES(NUM_SHARES), 
-                .BIT_WIDTH(4)
-            ) right_shared_0 (
-                .in_random(right_r_raw),
-                .out_random(right_r),
-                .in_clock(in_clock),
-                .in_reset(in_reset)
-            );
-            masked_zero #(
-                .NUM_SHARES(NUM_SHARES), 
-                .BIT_WIDTH(4)
-            ) left_shared_0 (
-                .in_random(left_r_raw),
-                .out_random(left_r),
-                .in_clock(in_clock),
-                .in_reset(in_reset)
-            );
-        end
-    endgenerate
-    
+    assign {left_p, right_p, theta_p, joint_r} = in_random;
+
+    /* verilator lint_off UNUSEDSIGNAL */
+    bv2_t[1:0][NUM_QUARDATIC-1:0] joint_split;
+    /* verilator lint_on UNUSEDSIGNAL */
+
+    masked_split_bv #(
+        .NUM_SHARES(NUM_QUARDATIC),
+        .HALF_WIDTH(2)
+    ) split (
+        .in_a(joint_r),
+        .out_b(joint_split)
+    );
+
+    bv2_t[1:0][NUM_QUARDATIC-1:0] theta_random;
+    assign theta_random = {theta_p, joint_split[0]};
+
     masked_bv4_comp_theta #(
         .NUM_SHARES(NUM_SHARES)
     ) c_theta (
@@ -80,26 +56,26 @@ module masked_bv8_inv_stage2_hpc3 (
         .in_reset(in_reset)
     );
     
-    masked_hpc1_mul #(
+    masked_hpc3_mul #(
         .NUM_SHARES(NUM_SHARES), 
         .BIT_WIDTH(4)
     ) mul_left (
-        .in_a(in_pow4_t1), 
-        .in_b(in_a0_t0),
-        .in_r(left_r),
+        .in_a(in_a0_t1), 
+        .in_b(in_pow4_t1),
+        .in_r(joint_r),
         .in_p(left_p), 
         .out_c(out_mul_a0_t2),
         .in_clock(in_clock),
         .in_reset(in_reset)
     );
     
-    masked_hpc1_mul #(
+    masked_hpc3_mul #(
         .NUM_SHARES(NUM_SHARES), 
         .BIT_WIDTH(4)
     ) mul_right (
-        .in_a(in_pow4_t1), 
-        .in_b(in_a1_t0),
-        .in_r(right_r),
+        .in_a(in_a1_t1), 
+        .in_b(in_pow4_t1),
+        .in_r(joint_r),
         .in_p(right_p), 
         .out_c(out_mul_a1_t2),
         .in_clock(in_clock),

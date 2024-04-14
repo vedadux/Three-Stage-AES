@@ -1,0 +1,11 @@
+{
+    "in_a0_t1" : {"type": "S", "len": 4},
+    "in_a1_t1" : {"type": "S", "len": 4},
+    "in_pow4_t1" : {"type": "S", "len": 4},
+    "in_random" : {"type": "M", "len": "?"},
+    "out_theta_t2": {"type": "O", "len": 2},
+    "out_mul_a0_t2": {"type": "O", "len": 4},
+    "out_mul_a1_t2": {"type": "O", "len": 4}, 
+    "in_clock": {"type": 1, "len": 1},
+    "in_reset": {"type": 0, "len": 1}
+}

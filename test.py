@@ -1,4 +1,6 @@
 GE = 0.798
+RANDOM_BIT_GE = 39.4
+
 print(1593.074000 / GE)
 print(3450.552000 / GE)
 print(6233.710000 / GE)
@@ -15,8 +17,40 @@ print(3380.594000 / GE)
 print(6010.536000 / GE)
 print(9045.596000 / GE)
 
-print("after repair")
-print(1610.896000 / GE)
-print(3382.190000 / GE)
-print(5961.858000 / GE)
-print(9057.300000 / GE)
+print("HPC3 variant")
+
+cost = [
+    1475.502000,
+    3518.116000,
+    6204.184000,
+    9308.936000,
+]
+
+bits = [
+    (31  + 1),
+    (95  + 1),
+    (191 + 1),
+    (319 + 1),
+]
+
+for c,b in zip(cost, bits):
+    print(f"{(c / GE):9.2f} | {(c / GE + b * RANDOM_BIT_GE):9.2f}")
+
+print("HPC1 variant")
+
+cost = [
+    1639.890000,
+    3409.588000,
+    5965.582000,
+    9023.518000,
+]
+
+bits = [
+    (33  + 1),
+    (105 + 1),
+    (211 + 1),
+    (339 + 1),
+]
+
+for c,b in zip(cost, bits):
+    print(f"{(c / GE):9.2f} | {(c / GE + b * RANDOM_BIT_GE):9.2f}")

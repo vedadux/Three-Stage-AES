@@ -3,6 +3,7 @@
 
 `include "aes128_package.sv"
 `include "masked_hpc3_mul.sv"
+`include "masked_split_bv.sv"
 `include "bv2_sq.sv"
 `include "bv2_scl_sigma.sv"
 
@@ -21,23 +22,24 @@ module masked_bv4_comp_theta #(
     output bv2_t[NUM_SHARES-1:0] out_b;
     input                    bit in_clock;
     input                    bit in_reset;
+    genvar i;
 
     bv2_t[NUM_QUADRATIC-1:0] random_r, random_p;
-    assign {random_r, random_p} = in_random;
+    assign {random_p, random_r} = in_random;
 
     bv2_t[1:0][NUM_SHARES-1:0] a_t0;
-    genvar i;
-    generate
-        for (i = 0; i < NUM_SHARES; i += 1) begin
-            assign a_t0[0][i] = in_a[i][3:2];
-            assign a_t0[1][i] = in_a[i][1:0];
-        end
-    endgenerate
+    masked_split_bv #(
+        .NUM_SHARES(NUM_SHARES),
+        .HALF_WIDTH(2)
+    ) split (
+        .in_a(in_a),
+        .out_b(a_t0)
+    );
 
     bv2_t[NUM_SHARES-1:0] a_mul_t1, a_xor_t1;
     masked_hpc3_mul #(.NUM_SHARES(NUM_SHARES), .BIT_WIDTH(2)) mul (
-        .in_a(a_t0[0]), 
-        .in_b(a_t0[1]),
+        .in_a(a_t0[1]), 
+        .in_b(a_t0[0]),
         .in_r(random_r),
         .in_p(random_p),
         .out_c(a_mul_t1),

@@ -12,7 +12,7 @@ module masked_aes_sbox_fwd (
 );
     import aes128_package::*;
     parameter NUM_SHARES = 2;
-    parameter stage_type_t STAGE_TYPE = HPC1;
+    parameter stage_type_t STAGE_TYPE = DEFAULT_STAGE_TYPE;
     localparam NUM_RANDOM = num_inv_random(NUM_SHARES, STAGE_TYPE);
 
     input  bv8_t[NUM_SHARES-1:0] in_a;
@@ -35,7 +35,10 @@ module masked_aes_sbox_fwd (
 
     bv8_t[NUM_SHARES-1:0] inv_out;
     
-    masked_bv8_inv #(.NUM_SHARES(NUM_SHARES)) inv(
+    masked_bv8_inv #(
+        .NUM_SHARES(NUM_SHARES),
+        .STAGE_TYPE(STAGE_TYPE)
+    ) inv (
         .in_a(fwd_in), 
         .in_random(in_random), 
         .out_b(inv_out),

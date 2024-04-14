@@ -3,7 +3,7 @@
 
 package aes128_package;
     typedef enum bit[0:0] {HPC1, HPC3} stage_type_t;     
-
+    localparam stage_type_t DEFAULT_STAGE_TYPE = HPC3;
     function automatic int num_quad;
         input int i;
         return i * (i - 1) / 2;

@@ -2,13 +2,13 @@
 `define MASKED_BV8_INV_SV
 
 `include "aes128_package.sv"
-`include "masked_zero.sv"
 `include "masked_split_bv.sv"
 `include "masked_hpc3_mul.sv"
 `include "register.sv"
 `include "bv4_sq_scl_s.sv"
 `include "bv4_pow4.sv"
 `include "masked_bv8_inv_stage2_hpc1.sv"
+`include "masked_bv8_inv_stage2_hpc3.sv"
 `include "masked_join_bv.sv"
 
 // Compute masked GF(2^8) Inverse
@@ -17,7 +17,7 @@ module masked_bv8_inv (
 );
     import aes128_package::*;
     parameter NUM_SHARES = 2;
-    parameter stage_type_t STAGE_TYPE = HPC1;
+    parameter stage_type_t STAGE_TYPE = DEFAULT_STAGE_TYPE;
     localparam NUM_QUARDATIC = num_quad(NUM_SHARES);
     localparam NUM_RANDOM = num_inv_random(NUM_SHARES, STAGE_TYPE);
     genvar i;
@@ -93,19 +93,39 @@ module masked_bv8_inv (
     bv4_t[NUM_SHARES-1:0] mul_a0_t2;
     bv4_t[NUM_SHARES-1:0] mul_a1_t2;
 
-    masked_bv8_inv_stage2_hpc1 #(
-        .NUM_SHARES(NUM_SHARES)
-    ) stage2_hpc1 (
-        .in_a0_t0(a_t0[0]),
-        .in_a1_t0(a_t0[1]),
-        .in_pow4_t1(pow4_out_t1),
-        .in_random(middle_randoms),
-        .out_theta_t2(theta_t2),
-        .out_mul_a0_t2(mul_a0_t2),
-        .out_mul_a1_t2(mul_a1_t2),
-        .in_clock(in_clock),
-        .in_reset(in_reset)
-    );
+    generate
+        if (STAGE_TYPE == HPC1) begin : gen_hpc1_stage
+            masked_bv8_inv_stage2_hpc1 #(
+                .NUM_SHARES(NUM_SHARES)
+            ) stage2_hpc1 (
+                .in_a0_t0(a_t0[0]),
+                .in_a1_t0(a_t0[1]),
+                .in_pow4_t1(pow4_out_t1),
+                .in_random(middle_randoms),
+                .out_theta_t2(theta_t2),
+                .out_mul_a0_t2(mul_a0_t2),
+                .out_mul_a1_t2(mul_a1_t2),
+                .in_clock(in_clock),
+                .in_reset(in_reset)
+            );
+        end else if (STAGE_TYPE == HPC3) begin : gen_hpc3_stage
+            masked_bv8_inv_stage2_hpc3 #(
+                .NUM_SHARES(NUM_SHARES)
+            ) stage2_hpc3 (
+                .in_a0_t1(a_t1[0]),
+                .in_a1_t1(a_t1[1]),
+                .in_pow4_t1(pow4_out_t1),
+                .in_random(middle_randoms),
+                .out_theta_t2(theta_t2),
+                .out_mul_a0_t2(mul_a0_t2),
+                .out_mul_a1_t2(mul_a1_t2),
+                .in_clock(in_clock),
+                .in_reset(in_reset)
+            );
+        end else begin : gen_error
+            $error("Unknown stage type");
+        end
+    endgenerate
 
     bv2_t[1:0][NUM_SHARES-1:0] mul_a0_split_t2, mul_a1_split_t2;
     
