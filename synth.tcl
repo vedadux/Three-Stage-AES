@@ -44,6 +44,7 @@ yosys tee -o $STATS_FILE stat
 set gates [get_gates $STATS_FILE]
 yosys log "Gates are $gates"
 yosys abc -g $gates
+yosys clean
 yosys stat
 
 yosys write_verilog $VLOG_PRE_MAP

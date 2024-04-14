@@ -19,14 +19,15 @@ module generic_mul #(
     output T out_c;
 
     generate
-        if (BIT_WIDTH == 1)
+        if (BIT_WIDTH == 1) begin : gen_bv1_mul
             assign out_c = in_a & in_b;
-        else if (BIT_WIDTH == 2)
+        end else if (BIT_WIDTH == 2) begin : gen_bv2_mul
             bv2_mul multiplier_bv2 (.in_a(in_a), .in_b(in_b), .out_c(out_c));
-        else if (BIT_WIDTH == 4)
+        end else if (BIT_WIDTH == 4) begin : gen_bv4_mul
             bv4_mul multiplier_bv4 (.in_a(in_a), .in_b(in_b), .out_c(out_c));
-        else
+        end else begin : gen_error
             $error("Unsupported type");
+        end
     endgenerate
 endmodule : generic_mul
 `endif // GENERIC_MUL_SV

@@ -8,21 +8,18 @@
 `include "register.sv"
 `include "bv4_sq_scl_s.sv"
 `include "bv4_pow4.sv"
-`include "masked_bv4_comp_theta.sv"
-`include "masked_hpc1_mul.sv"
-`include "masked_hpc3_mul_skewed.sv"
+`include "masked_bv8_inv_stage2_hpc1.sv"
 `include "masked_join_bv.sv"
 
 // Compute masked GF(2^8) Inverse
-module masked_bv8_inv #(
-    parameter NUM_SHARES = 2
-)(
+module masked_bv8_inv (
     in_a, in_random, out_b, in_clock, in_reset
 );
     import aes128_package::*;
+    parameter NUM_SHARES = 2;
+    parameter stage_type_t STAGE_TYPE = HPC1;
     localparam NUM_QUARDATIC = num_quad(NUM_SHARES);
-    localparam NUM_ZERO_RANDOM = num_zero_random(NUM_SHARES);
-    localparam NUM_RANDOM = num_inv_random(NUM_SHARES);
+    localparam NUM_RANDOM = num_inv_random(NUM_SHARES, STAGE_TYPE);
     genvar i;
 
     input  bv8_t[NUM_SHARES-1:0] in_a;
@@ -33,38 +30,15 @@ module masked_bv8_inv #(
 
     bv4_t[NUM_QUARDATIC-1:0]      front_r;
     bv4_t[NUM_QUARDATIC-1:0]      front_p;
-    bv2_t[NUM_QUARDATIC-1:0][1:0] theta_random;
-    bv4_t[NUM_ZERO_RANDOM-1:0]    right_r_raw;
-    bv4_t[NUM_QUARDATIC-1:0]      right_p;
-    bv4_t[NUM_ZERO_RANDOM-1:0]    left_r_raw;
-    bv4_t[NUM_QUARDATIC-1:0]      left_p;
+    
+    localparam NUM_RANDOM_STAGE_2 = stage_2_randoms(NUM_SHARES, STAGE_TYPE);
+    bit [NUM_RANDOM_STAGE_2-1:0] middle_randoms;
+
     bv2_t[NUM_QUARDATIC-1:0]      back_r;
     bv2_t[3:0][NUM_QUARDATIC-1:0] back_ps;
-
-    assign {back_ps, back_r, left_p, left_r_raw, right_p, right_r_raw, theta_random, front_p, front_r} = in_random;
     
-    bv4_t[NUM_SHARES-1:0] left_r;
-    masked_zero #(
-        .NUM_SHARES(NUM_SHARES), 
-        .BIT_WIDTH(4)
-    ) left_shared_0 (
-        .in_random(left_r_raw),
-        .out_random(left_r),
-        .in_clock(in_clock),
-        .in_reset(in_reset)
-    );
-
-    bv4_t[NUM_SHARES-1:0] right_r;
-    masked_zero #(
-        .NUM_SHARES(NUM_SHARES), 
-        .BIT_WIDTH(4)
-    ) right_shared_0 (
-        .in_random(right_r_raw),
-        .out_random(right_r),
-        .in_clock(in_clock),
-        .in_reset(in_reset)
-    );
-
+    assign {back_ps, back_r, middle_randoms, front_p, front_r} = in_random;
+    
     bv4_t[1:0][NUM_SHARES-1:0] a_t0;
     masked_split_bv #(
         .NUM_SHARES(NUM_SHARES),
@@ -78,7 +52,7 @@ module masked_bv8_inv #(
     masked_hpc3_mul #(
         .NUM_SHARES(NUM_SHARES), 
         .BIT_WIDTH(4)) 
-        mul_front (
+    mul_front (
         .in_a(a_t0[0]), .in_b(a_t0[1]), 
         .in_r(front_r), .in_p(front_p), 
         .out_c(a_mul_t1), 
@@ -116,40 +90,19 @@ module masked_bv8_inv #(
     endgenerate
     
     bv2_t[NUM_SHARES-1:0] theta_t2;
-    masked_bv4_comp_theta #(
-        .NUM_SHARES(NUM_SHARES)
-        ) c_theta (
-        .in_a(pow4_out_t1), 
-        .in_random(theta_random), 
-        .out_b(theta_t2),
-        .in_clock(in_clock),
-        .in_reset(in_reset)
-    );
-    
-    bv4_t[NUM_SHARES-1:0] mul_a0_t2, mul_a1_t2;
+    bv4_t[NUM_SHARES-1:0] mul_a0_t2;
+    bv4_t[NUM_SHARES-1:0] mul_a1_t2;
 
-    masked_hpc1_mul #(
-        .NUM_SHARES(NUM_SHARES), 
-        .BIT_WIDTH(4)
-    ) mul_left (
-        .in_a(pow4_out_t1), 
-        .in_b(a_t0[0]),
-        .in_r(left_r),
-        .in_p(left_p), 
-        .out_c(mul_a0_t2),
-        .in_clock(in_clock),
-        .in_reset(in_reset)
-    );
-    
-    masked_hpc1_mul #(
-        .NUM_SHARES(NUM_SHARES), 
-        .BIT_WIDTH(4)
-    ) mul_right (
-        .in_a(pow4_out_t1), 
-        .in_b(a_t0[1]),
-        .in_r(right_r),
-        .in_p(right_p), 
-        .out_c(mul_a1_t2),
+    masked_bv8_inv_stage2_hpc1 #(
+        .NUM_SHARES(NUM_SHARES)
+    ) stage2_hpc1 (
+        .in_a0_t0(a_t0[0]),
+        .in_a1_t0(a_t0[1]),
+        .in_pow4_t1(pow4_out_t1),
+        .in_random(middle_randoms),
+        .out_theta_t2(theta_t2),
+        .out_mul_a0_t2(mul_a0_t2),
+        .out_mul_a1_t2(mul_a1_t2),
         .in_clock(in_clock),
         .in_reset(in_reset)
     );

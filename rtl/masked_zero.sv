@@ -21,20 +21,22 @@ module masked_zero #(
     
     T[NUM_SHARES-1:0] shared_zero;
     generate
-        if (NUM_SHARES == 2) begin
+        if (NUM_SHARES == 2) begin : gen_2_shares
             assign shared_zero[0] = in_random[0];
             assign shared_zero[1] = in_random[0];
         end
-        else if (NUM_SHARES == 3) begin
+        else if (NUM_SHARES == 3) begin : gen_3_shares
             assign shared_zero[0] = in_random[0];
             assign shared_zero[1] = in_random[1];
             assign shared_zero[2] = in_random[0] ^ in_random[1];
         end
-        else if (NUM_SHARES == 4 || NUM_SHARES == 5) begin
+        else if (NUM_SHARES == 4 || NUM_SHARES == 5) begin : gen_gt3_shares
             T[NUM_SHARES-1:0] shuffled_random = {in_random[0], in_random[NUM_SHARES-1:1]};
             assign shared_zero = in_random ^ shuffled_random;
         end
-        else $error("Unsuported number of shares");
+        else begin : gen_error
+            $error("Unsuported number of shares");
+        end
     endgenerate
 
     register #(.T(T[NUM_SHARES-1:0])) reg_stage (

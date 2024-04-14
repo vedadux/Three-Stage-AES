@@ -71,10 +71,10 @@ module masked_hpc3_mul #(
     genvar i, j;
     generate
         for (i = 0; i < NUM_SHARES; i++)
-        begin
+        begin : gen_iter_i
             for (j = 0; j < NUM_SHARES; j++)
-            begin
-                if (i != j) begin
+            begin : gen_iter_j
+                if (i != j) begin : gen_ij_neq
                     localparam jj = (j < i) ? j : (j - 1);
                     // Compute V_{i,j} = R_{i,j} + B_j
                     assign blinded_b_d[i][jj] = in_b[j] ^ in_r[qindex(i, j, NUM_SHARES)];

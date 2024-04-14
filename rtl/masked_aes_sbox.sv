@@ -7,13 +7,13 @@
 `include "masked_bv8_inv.sv"
 
 // Compute masked AES S-Box
-module masked_aes_sbox #(
-    parameter NUM_SHARES = 2
-)(
+module masked_aes_sbox (
     in_a, in_enc, in_random, out_b, in_clock, in_reset
 );
     import aes128_package::*;
-    localparam NUM_RANDOM = num_inv_random(NUM_SHARES);
+    parameter NUM_SHARES = 2;
+    parameter stage_type_t STAGE_TYPE = HPC1;
+    localparam NUM_RANDOM = num_inv_random(NUM_SHARES, STAGE_TYPE);
 
     input  bv8_t[NUM_SHARES-1:0] in_a;
     input                    bit in_enc;

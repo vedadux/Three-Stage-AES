@@ -44,16 +44,19 @@ module masked_hpc1_mul #(
     genvar i, j;
     generate
         for (i = 0; i < NUM_SHARES; i++)
-        begin
+        begin : gen_iter_i
             for (j = 0; j < NUM_SHARES; j++)
-            begin
+            begin : gen_iter_j
                 generic_mul #(.BIT_WIDTH(BIT_WIDTH)) gen_mul_ij(
                     .in_a(in_a[i]), 
                     .in_b(reg_ref_b_q[j]), 
                     .out_c(cross_mul[i][j])
                 );
-                if (i == j) assign c_array_d[i][j] = cross_mul[i][j];
-                else        assign c_array_d[i][j] = cross_mul[i][j] ^ in_p[qindex(i, j, NUM_SHARES)];
+                if (i == j) begin : gen_ij_eq
+                    assign c_array_d[i][j] = cross_mul[i][j];
+                end else begin : gen_ij_neq
+                    assign c_array_d[i][j] = cross_mul[i][j] ^ in_p[qindex(i, j, NUM_SHARES)];
+                end
                 register #(.T(T)) gen_reg_ij(
                     .in_value(c_array_d[i][j]), 
                     .out_value(c_array_q[i][j]),

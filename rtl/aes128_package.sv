@@ -2,6 +2,8 @@
 `define AES128_PACKAGE_SV
 
 package aes128_package;
+    typedef enum bit[0:0] {HPC1, HPC3} stage_type_t;     
+
     function automatic int num_quad;
         input int i;
         return i * (i - 1) / 2;
@@ -18,18 +20,54 @@ package aes128_package;
         $error("Unsupported number of shares");
     endfunction
     
-    function automatic int num_inv_random;
+    function automatic int stage_1_randoms;
+        input int i;
+        int q = num_quad(i);
+        return 2 * (q * 4); // front_r and front_p
+    endfunction
+
+    function automatic int stage_3_randoms;
+        input int i;
+        int q = num_quad(i);
+        return 1 * (q * 2) + // back_r
+               4 * (q * 2) ; // back_ps
+    endfunction
+
+    function automatic int stage_2_hpc1_randoms;
         input int i;
         int q = num_quad(i);
         int r = num_zero_random(i);
-        return 2 * (q * 4) + // front_r and front_p
-               2 * (q * 2) + // theta_random
-               1 * (r * 4) + // right_r_raw
-               1 * (q * 4) + // right_p
-               1 * (r * 4) + // left_r_raw
+        int basis = 2 * (q * 2) + // theta_random
+                    1 * (q * 4) + // right_p
+                    1 * (q * 4) ; // left_p
+        int num_refreshes = (i == 2) ? 1 : 2;
+        int refreshes = num_refreshes * (r * 4); // right_r_raw and left_r_raw
+        return basis + refreshes;
+    endfunction
+
+    function automatic int stage_2_hpc3_randoms;
+        input int i;
+        int q = num_quad(i);
+        return 1 * (q * 4) + // joint_r
                1 * (q * 4) + // left_p
-               1 * (q * 2) + // back_r
-               4 * (q * 2);  // back_ps
+               1 * (q * 4) + // right_p
+               1 * (q * 2) ; // theta_p
+    endfunction
+
+    function automatic int stage_2_randoms;
+        input int i;
+        input stage_type_t t;
+        return (t == HPC1) ? stage_2_hpc1_randoms(i)
+                           : stage_2_hpc3_randoms(i);
+    endfunction
+
+
+    function automatic int num_inv_random;
+        input int i;
+        input stage_type_t t;
+        return stage_1_randoms(i) + 
+               stage_2_randoms(i, t) +
+               stage_3_randoms(i);               
     endfunction
 
     function automatic int qindex;
