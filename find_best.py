@@ -12,7 +12,7 @@ def y(d):
     if d in (4, 5): return d
     assert(False)
 
-NUM_SHARES = 5
+NUM_SHARES = 4
 
 HPC1_COSTS = {
     4: { 2: 271.852000 ,
@@ -42,15 +42,26 @@ MASKED_ZERO_COST = 9.044000
 
 class Signal:
     SIZES = {}
-    def __init__(self, name, width, latency=0):
+    HPC1_REFS = {}
+    HPC3_REFS = {}
+    def __init__(self, name, width, latency=0, rhpc1=False, rhpc3=False):
+        global solver
         self.name = name
         self.width = width
         self.latency = latency
         self.SIZES[self.name] = self.width
+        
+        rhpc1_new = z3.Bool(f"{name}_hpc1_ref")
+        rhpc3_new = z3.Bool(f"{name}_hpc3_ref")
+        self.HPC1_REFS[self.name] = rhpc1_new
+        self.HPC3_REFS[self.name] = rhpc3_new
+        
+        self.hpc1_refresh = z3.Or(rhpc1_new, rhpc1)
+        self.hpc3_refresh = z3.Or(rhpc3_new, rhpc3)
     def split(self):
         assert(self.width % 2 == 0)
-        return (Signal(f"{self.name}_l", self.width // 2, self.latency),
-                Signal(f"{self.name}_h", self.width // 2, self.latency))
+        return (Signal(f"{self.name}_l", self.width // 2, self.latency, self.hpc1_refresh, self.hpc3_refresh),
+                Signal(f"{self.name}_h", self.width // 2, self.latency, self.hpc1_refresh, self.hpc3_refresh))
 
 
 def max_lat(*args):
@@ -67,87 +78,97 @@ def lin_comb(sigs, z_name, z_width):
     latencies = map(lambda sig: sig.latency, sigs)
     return Signal(z_name, z_width, max_lat(*latencies))    
 
+def bool2int(x):
+    return z3.If(x, 1, 0)
 
-HPC1_REFS = {}
-def get_hpc1_ref(name):
+
+def hpc1(x, y, z_name, active):
     global solver
-    global HPC1_REFS
-    if (name not in HPC1_REFS):
-        v = z3.Int(f"{name}_hpc1_ref")
-        solver.add(z3.Or(v == 0, v == 1))
-        HPC1_REFS[name] = v
-    return HPC1_REFS[name]
-
-
-HPC3_REFS = {}
-def get_hpc3_ref(name):
-    global solver
-    global HPC3_REFS
-    if (name not in HPC3_REFS):
-        v = z3.Int(f"{name}_hpc3_ref")
-        solver.add(z3.Or(v == 0, v == 1))
-        HPC3_REFS[name] = v
-    return HPC3_REFS[name]
-
-
-def hpc1(x_sig, y_sig, z_name, active):
-    global solver
-    assert(x_sig.width == y_sig.width)
-    z_width = x_sig.width
-    x_ref = get_hpc1_ref(x_sig.name)
-    y_ref = get_hpc1_ref(y_sig.name)
-    solver.add(z3.Implies(active, z3.Or(x_ref == 1, y_ref == 1)))
-    z_lat = max_lat(x_ref + x_sig.latency, y_ref + y_sig.latency) + 1
+    assert(x.width == y.width)
+    z_width = x.width
+    z_lat = max_lat(bool2int(x.hpc1_refresh) + x.latency, bool2int(y.hpc1_refresh) + y.latency) + 1
+    solver.add(z3.Implies(active, z3.Or(x.hpc1_refresh, y.hpc1_refresh)))
     return Signal(z_name, z_width, z_lat)
 
 
-def hpc3(x_sig, y_sig, z_name, active):
-    assert(x_sig.width == y_sig.width)
-    z_width = x_sig.width
-    x_ref = get_hpc3_ref(x_sig.name)
-    y_ref = get_hpc3_ref(y_sig.name)
-    solver.add(z3.Implies(active, z3.Or(x_ref == 1, y_ref == 1)))
-    z_lat = max_lat(x_sig.latency, y_sig.latency) + 1
+def hpc3(x, y, z_name, active):
+    global solver
+    assert(x.width == y.width)
+    z_width = x.width
+    z_lat = max_lat(x.latency, y.latency) + 1
+    solver.add(z3.Implies(active, z3.Or(x.hpc3_refresh, y.hpc3_refresh)))
     return Signal(z_name, z_width, z_lat)
 
 
 MUL_TYPE = {}
 
-def mul(x_sig, y_sig, z_name):
+def mul(x, y, z_name):
     global MUL_TYPE
-    assert(x_sig.width == y_sig.width)
-    z_width = x_sig.width
+    assert(x.width == y.width)
+    z_width = x.width
     choice = z3.Bool(f"{z_name}_is_hpc3")
-    hpc3_gadget = hpc3(x_sig, y_sig, z_name, choice)
-    hpc1_gadget = hpc1(x_sig, y_sig, z_name, z3.Not(choice))
+    hpc3_gadget = hpc3(x, y, f"{z_name}_hpc1_version", choice)
+    hpc1_gadget = hpc1(x, y, f"{z_name}_hpc3_version", z3.Not(choice))
     z_lat = z3.If(choice, hpc3_gadget.latency, hpc1_gadget.latency)
     assert(z_name not in MUL_TYPE)
     MUL_TYPE[z_name] = choice
     return Signal(z_name, z_width, z_lat)
 
+def new_sbox():
+    a = Signal("a", 8)
+    a0, a1 = a.split()
 
-a0 = Signal("a0", 4)
-a1 = Signal("a1", 4)
+    a0_c = lin_comb([a0], "a0_c", 4)
+    a1_c = lin_comb([a1], "a1_c", 4)
 
-b = mul(a0, a1, "b")
-c = lin_comb([a0, a1, b], "c", 4)
+    b = mul(a0, a1, "b")
+    c = lin_comb([a0, a1, b], "c", 4)
 
-d0 = mul(a0, c, "d0")
-d1 = mul(a1, c, "d1")
+    d0 = mul(a0_c, c, "d0")
+    d1 = mul(a1_c, c, "d1")
 
-cl, ch = c.split()
-e = mul(cl, ch, "e")
-f = lin_comb([cl, ch, e], "f", 2)
+    cl, ch = c.split()
+    e = mul(cl, ch, "e")
+    f = lin_comb([cl, ch, e], "f", 2)
 
-d0l, d0h = d0.split()
-d1l, d1h = d1.split()
-gs = []
-for i,dd in enumerate([d0l, d0h, d1l, d1h]):
-    gs.append(mul(f, dd, f"g{i}"))
+    d0l, d0h = d0.split()
+    d1l, d1h = d1.split()
+    gs = []
+    for i,dd in enumerate([d0l, d0h, d1l, d1h]):
+        gs.append(mul(f, dd, f"g{i}"))
 
-h = lin_comb(gs, "h", 8)
+    h = lin_comb(gs, "h", 8)
+    solver.add(h.latency <= 4)
 
-solver.add(h.latency <= 4)
+
+def old_sbox():
+    a = Signal("a", 8)
+    a0, a1 = a.split()
+
+    a0_f = lin_comb([a0], "a0_f", 4)
+    a1_f = lin_comb([a1], "a1_f", 4)
+
+    b = mul(a0, a1, "b")
+    c = lin_comb([a0, a1, b], "c", 4)
+
+    cl, ch = c.split()
+    cl_e = lin_comb([cl], "cl_e", 2)
+    ch_e = lin_comb([ch], "ch_e", 2)
+    
+    d = mul(cl, ch, "d")
+    e = lin_comb([cl, ch, d], "e", 2)
+    fl = mul(ch_e, e, "fl")
+    fh = mul(cl_e, e, "fh")
+    f = lin_comb([fl, fh], "f", 4)
+    
+    g0 = mul(a1_f, f, "g0")
+    g1 = mul(a0_f, f, "g1")
+    
+    h = lin_comb([g0, g1], "h", 8)
+    solver.add(h.latency <= 4)
+
+
+old_sbox()
 
 def get_ref_cost_hpc1(ref, name):
     rand_bits = ref * y(NUM_SHARES) * Signal.SIZES[name]
@@ -164,31 +185,35 @@ def get_mul_cost(is_hpc3, name):
     rand_bits = x(NUM_SHARES) * Signal.SIZES[name]
     return z3.If(is_hpc3, hpc3_cost, hpc1_cost) + rand_bits * int(RANDOM_BIT_COST)
 
-ref_cost_hpc1 = [get_ref_cost_hpc1(ref, name) for name, ref in HPC1_REFS.items()]
-ref_cost_hpc3 = [get_ref_cost_hpc3(ref, name) for name, ref in HPC3_REFS.items()]
+ref_cost_hpc1 = [get_ref_cost_hpc1(ref, name) for name, ref in Signal.HPC1_REFS.items()]
+ref_cost_hpc3 = [get_ref_cost_hpc3(ref, name) for name, ref in Signal.HPC3_REFS.items()]
 ref_cost_outer = [get_mul_cost(is_hpc3, name) for name, is_hpc3 in MUL_TYPE.items()]
 total_cost = functools.reduce(lambda a, b: a + b, ref_cost_hpc1 + ref_cost_hpc3 + ref_cost_outer)
 
-rand_cost_hpc1 = [ref * y(NUM_SHARES) * Signal.SIZES[name] for name, ref in HPC1_REFS.items()]
-rand_cost_hpc3 = [ref * x(NUM_SHARES) * Signal.SIZES[name] for name, ref in HPC3_REFS.items()]
+rand_cost_hpc1 = [ref * y(NUM_SHARES) * Signal.SIZES[name] for name, ref in Signal.HPC1_REFS.items()]
+rand_cost_hpc3 = [ref * x(NUM_SHARES) * Signal.SIZES[name] for name, ref in Signal.HPC3_REFS.items()]
 rand_cost_outer = [x(NUM_SHARES) * Signal.SIZES[name] for name, is_hpc3 in MUL_TYPE.items()]
 rand_cost = functools.reduce(lambda a, b: a + b, rand_cost_hpc1 + rand_cost_hpc3 + rand_cost_outer)
 
+
+target_cost = total_cost
 
 cost = None
 while True:
     solver.push()
     if cost is not None:
-        solver.add(total_cost < cost)
+        solver.add(target_cost < cost)
     res = solver.check()
     if res == z3.sat:
         model = solver.model()
-        cost = model.eval(total_cost)
-        print(f"\n\nArea cost: {cost.as_long()}")
-        print(f"\n\nRand cost: {model.eval(rand_cost).as_long()}")        
-        for r in HPC1_REFS.values():
+        cost = model.eval(target_cost, True)
+        print("\n")
+        print(f"Target cost: {cost.as_long()}")
+        print(f"Area cost: {model.eval(total_cost).as_long()}")
+        print(f"Rand cost: {model.eval(rand_cost).as_long()}")        
+        for r in Signal.HPC1_REFS.values():
             print(f"{r} = {model.eval(r)}")
-        for r in HPC3_REFS.values():
+        for r in Signal.HPC3_REFS.values():
             print(f"{r} = {model.eval(r)}")
         for c in MUL_TYPE.values():
             print(f"{c} = {model.eval(c)}")

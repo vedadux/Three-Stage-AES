@@ -23,7 +23,15 @@ proc get_gates {filename} {
         if {[string first "$" $match] == -1 &&
             [string first "DFF" $match] == -1 && 
             [string first "NOT" $match] == -1} {
-           lappend result $match
+           
+            # if {[string equal "AND" $match]} {
+            #     lappend result "NAND";
+            # } elseif {[string equal "XOR" $match]} {
+            #     lappend result "XOR";
+            #     lappend result "XNOR";
+            # } else {
+                lappend result $match
+            # }
         }
     }
     

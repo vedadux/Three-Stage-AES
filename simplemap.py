@@ -1,15 +1,21 @@
 # coding: utf-8
 
-AND_COST = 1.064
-XOR_COST = 1.596
-DFF_COST = 4.522
+import re
 
-AND_T = "$_AND_"
-XOR_T = "$_XOR_"
-DFF_T = "$_DFF_P_"
+costs = {
+     "$_NOT_"  : 0.532,
+     "$_NAND_" : 0.798, 
+     "$_AND_"  : 1.064, 
+     "$_XOR_"  : 1.596, 
+     "$_XNOR_" : 1.596, 
+     "$_DFF_P_": 4.522, 
+}
 
 def get_area(text):
+     timestamp = re.compile("\[\d+\.\d+\]")
+     for t in timestamp.findall(text):
+          text = text.replace(t, "")
      data = text.split()
      data = {data[2*i]:int(data[2*i+1]) for i in range(len(data)//2)}
-     area = data[AND_T] * AND_COST + data[XOR_T] * XOR_COST + data[DFF_T] * DFF_COST
+     area = sum(map(lambda x: costs[x[0]] * x[1], data.items()))
      return area

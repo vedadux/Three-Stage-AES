@@ -54,3 +54,17 @@ bits = [
 
 for c,b in zip(cost, bits):
     print(f"{(c / GE):9.2f} | {(c / GE + b * RANDOM_BIT_GE):9.2f}")
+
+
+"""
+[00002.514166]    Chip area for module '\masked_aes_sbox_fwd': 1490.664000
+[00004.390241]    Chip area for module '\masked_aes_sbox_fwd': 3441.508000
+[00007.007593]    Chip area for module '\masked_aes_sbox_fwd': 6216.420000
+[00011.527108]    Chip area for module '\masked_aes_sbox_fwd': 9192.428000
+
+[00002.661111]    Chip area for module '\masked_aes_sbox_fwd': 1478.960000
+[00004.952743]    Chip area for module '\masked_aes_sbox_fwd': 3358.782000
+[00007.853562]    Chip area for module '\masked_aes_sbox_fwd': 6123.054000
+[00011.669182]    Chip area for module '\masked_aes_sbox_fwd': 9144.282000
+
+"""

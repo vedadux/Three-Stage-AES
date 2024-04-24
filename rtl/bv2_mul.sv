@@ -13,16 +13,15 @@ module bv2_mul (
     input  bv2_t in_b;
     output bv2_t out_c;
 
-    bv1_t a_xor, b_xor;
-    assign a_xor = in_a[0] ^ in_a[1];
-    assign b_xor = in_b[0] ^ in_b[1];
-
-    bv1_t[2:0] a_ext, b_ext, ab_dot;
-    assign a_ext = {a_xor, in_a};
-    assign b_ext = {b_xor, in_b};
-    assign ab_dot = a_ext & b_ext;
-
-    assign out_c[0] = ab_dot[0] ^ ab_dot[2];
-    assign out_c[1] = ab_dot[1] ^ ab_dot[2];
+    bv1_t front_0; assign front_0 = in_a[0] ^ in_a[1];
+    bv1_t front_1; assign front_1 = in_b[0] ^ in_b[1];
+    bv1_t middle_0; nand(middle_0, in_a[0], in_b[0]);
+    bv1_t middle_1; nand(middle_1, in_a[1], in_b[1]);
+    bv1_t middle_2; nand(middle_2, front_0, front_1);
+    bv1_t back_0; assign back_0 = middle_0 ^ middle_2;
+    bv1_t back_1; assign back_1 = middle_1 ^ middle_2;
+    
+    assign out_c[0] = back_0;
+    assign out_c[1] = back_1;
 endmodule : bv2_mul
 `endif // BV2_MUL_SV

@@ -6,7 +6,9 @@ NUM_SHARES = 0
 
 CELLS_INFO = {
     "$_AND_":   {"ins": ["A", "B"], "out": "Y"},
+    "$_NAND_":  {"ins": ["A", "B"], "out": "Y"},
     "$_XOR_":   {"ins": ["A", "B"], "out": "Y"},
+    "$_XNOR_":  {"ins": ["A", "B"], "out": "Y"},
     "$_NOT_":   {"ins": ["A"], "out": "Y"},
     "$_DFF_P_": {"ins": ["D"], "out": "Q"},
 }
@@ -41,6 +43,9 @@ def not_impl(a):
         return str(1 - int(a))
     return gate("not", a)
 
+def nand_impl(a, b):
+    return not_impl(and_impl(a, b))
+
 def xor_impl(a, b):
     a_str, b_str = (type(a) is str), (type(b) is str)
     if a_str and b_str:
@@ -50,6 +55,9 @@ def xor_impl(a, b):
     elif b_str:
         return not_impl(a) if int(b) else a
     return gate("xor", a, b)
+
+def xnor_impl(a, b):
+    return not_impl(xor_impl(a, b))
 
 def dff_impl(d):
     if type(d) is str:
@@ -73,6 +81,8 @@ CELL_IMPL = {
     "$_AND_":   and_impl,
     "$_XOR_":   xor_impl,
     "$_NOT_":   not_impl,
+    "$_NAND_":  nand_impl,
+    "$_XNOR_":  xnor_impl,
     "$_DFF_P_": dff_impl,
 }
 
@@ -190,7 +200,11 @@ def execute_circuit(ports, bit_defines, bit_names, spec):
 
     inverse_symbol_table = {sym: idx for idx, sym in symbol_table.items() if type(sym) is not str}
 
-    LINES = [(l + " #").ljust(15, " ") + f"{bit_names[inverse_symbol_table[i]][0]}"
+
+    LINES = [(l + " #").ljust(15, " ") + 
+             (f"{i}: {bit_names[inverse_symbol_table[i]][0]}" 
+                if i in inverse_symbol_table else 
+              "")
         for i,l in enumerate(LINES)]
 
     final_outs = []
