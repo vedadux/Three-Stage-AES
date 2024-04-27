@@ -7,13 +7,13 @@
 `include "reduce_xor.sv"
 
 module masked_hpc2_mul #(
-    parameter NUM_SHARES = 2,
-    parameter BIT_WIDTH = 2
+    parameter NUM_SHARES = 2
 )(
     in_a, in_b, in_r, out_c, in_clock, in_reset
 );
     import aes128_package::*;
     localparam NUM_QUARDATIC = num_quad(NUM_SHARES);
+    localparam BIT_WIDTH = 1;
     typedef bit[BIT_WIDTH-1:0] T;
 
     input T[NUM_SHARES-1:0] in_a;

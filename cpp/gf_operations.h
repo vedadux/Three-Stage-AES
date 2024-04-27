@@ -41,7 +41,12 @@ uint64_t gf_256_inv_canright(uint64_t x);
 /// @brief Computes the inverse in GF(16) in normal GF(16) basis (Z^4, Z)
 /// @param x Number to be inverted
 /// @return \c x ^(-1)
-uint64_t gf_16_inv(uint64_t x);
+uint64_t gf_16_inv_canright(uint64_t x);
+
+/// @brief Computes the inverse in GF(16) in normal GF(16) basis (Z^4, Z)
+/// @param x Number to be inverted
+/// @return \c x ^(-1)
+uint64_t gf_16_inv_new(uint64_t x);
 
 /// @brief Squares \c x and multiplies it with s in normal GF(16) basis (Z^4, Z)
 /// @param x Number to be squared and scaled

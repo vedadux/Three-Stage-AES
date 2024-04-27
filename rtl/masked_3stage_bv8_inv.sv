@@ -1,5 +1,5 @@
-`ifndef MASKED_BV8_INV_SV
-`define MASKED_BV8_INV_SV
+`ifndef MASKED_3STAGE_BV8_INV_SV
+`define MASKED_3STAGE_BV8_INV_SV
 
 `include "aes128_package.sv"
 `include "masked_split_bv.sv"
@@ -7,19 +7,19 @@
 `include "register.sv"
 `include "bv4_sq_scl_s.sv"
 `include "bv4_pow4.sv"
-`include "masked_bv8_inv_stage2_hpc1.sv"
-`include "masked_bv8_inv_stage2_hpc3.sv"
+`include "masked_3stage_bv8_inv_stage2_hpc1.sv"
+`include "masked_3stage_bv8_inv_stage2_hpc3.sv"
 `include "masked_join_bv.sv"
 
 // Compute masked GF(2^8) Inverse
-module masked_bv8_inv (
+module masked_3stage_bv8_inv (
     in_a, in_random, out_b, in_clock, in_reset
 );
     import aes128_package::*;
     parameter NUM_SHARES = 2;
     parameter stage_type_t STAGE_TYPE = DEFAULT_STAGE_TYPE;
     localparam NUM_QUARDATIC = num_quad(NUM_SHARES);
-    localparam NUM_RANDOM = num_inv_random(NUM_SHARES, STAGE_TYPE);
+    localparam NUM_RANDOM = num_3stage_inv_random(NUM_SHARES, STAGE_TYPE);
     genvar i;
 
     input  bv8_t[NUM_SHARES-1:0] in_a;
@@ -95,7 +95,7 @@ module masked_bv8_inv (
 
     generate
         if (STAGE_TYPE == HPC1) begin : gen_hpc1_stage
-            masked_bv8_inv_stage2_hpc1 #(
+            masked_3stage_bv8_inv_stage2_hpc1 #(
                 .NUM_SHARES(NUM_SHARES)
             ) stage2_hpc1 (
                 .in_a0_t0(a_t0[0]),
@@ -109,7 +109,7 @@ module masked_bv8_inv (
                 .in_reset(in_reset)
             );
         end else if (STAGE_TYPE == HPC3) begin : gen_hpc3_stage
-            masked_bv8_inv_stage2_hpc3 #(
+            masked_3stage_bv8_inv_stage2_hpc3 #(
                 .NUM_SHARES(NUM_SHARES)
             ) stage2_hpc3 (
                 .in_a0_t1(a_t1[0]),
@@ -185,5 +185,5 @@ module masked_bv8_inv (
         .in_a(mul_back_joined_t3),
         .out_b(out_b)
     );
-endmodule : masked_bv8_inv
-`endif // MASKED_BV8_INV_SV
+endmodule : masked_3stage_bv8_inv
+`endif // MASKED_3STAGE_BV8_INV_SV

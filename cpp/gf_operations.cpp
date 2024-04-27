@@ -93,7 +93,7 @@ uint64_t gf_16_sq_scl_s(uint64_t x)
     return (yh << 2) | (yl << 0);
 }
 
-uint64_t gf_16_inv(uint64_t x)
+uint64_t gf_16_inv_canright(uint64_t x)
 {
     uint64_t xh = extract(x, 3, 2); 
     uint64_t xl = extract(x, 1, 0);
@@ -105,13 +105,40 @@ uint64_t gf_16_inv(uint64_t x)
     return (yh << 2) | (yl << 0);
 }
 
+uint64_t gf_16_inv_new(uint64_t x)
+{
+    uint64_t x0 = extract(x, 0, 0);
+    uint64_t x1 = extract(x, 1, 1);
+    uint64_t x2 = extract(x, 2, 2);
+    uint64_t x3 = extract(x, 3, 3);
+
+    uint64_t a0 = x1 ^ x0; // depth(1)
+    uint64_t a1 = x3 ^ x2; // depth(1)
+    uint64_t b0 = x2 & x0; // depth(1)
+    uint64_t b1 = x3 & x1; // depth(1)
+    uint64_t c0 = a0 ^ b0; // depth(2)
+    uint64_t c1 = a1 ^ b0; // depth(2)
+    uint64_t d0 = x0 ^ b1; // depth(2)
+    uint64_t d1 = x2 ^ b1; // depth(2)
+    uint64_t e0 = x3 & c0; // depth(3)
+    uint64_t e1 = x1 & c1; // depth(3)
+    uint64_t f0 = a1 & d0; // depth(3)
+    uint64_t f1 = a0 & d1; // depth(3)
+    uint64_t y3 = a0 ^ e1; // depth(4)
+    uint64_t y2 = x0 ^ f1; // depth(4)
+    uint64_t y1 = a1 ^ e0; // depth(4)
+    uint64_t y0 = x2 ^ f0; // depth(4)
+
+    return (y3 << 3) | (y2 << 2) | (y1 << 1) | (y0 << 0);
+}
+
 uint64_t gf_256_inv_canright(uint64_t x)
 {
     uint64_t xh = extract(x, 7, 4); 
     uint64_t xl = extract(x, 3, 0);
     uint64_t aa = gf_16_sq_scl_s(xh ^ xl);
     uint64_t bb = gf_16_mul(xh, xl);
-    uint64_t cc = gf_16_inv(aa ^ bb);
+    uint64_t cc = gf_16_inv_new(aa ^ bb);
     uint64_t yh = gf_16_mul(cc, xl);
     uint64_t yl = gf_16_mul(cc, xh);
     return (yh << 4) | (yl << 0);

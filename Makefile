@@ -22,8 +22,10 @@ V_FILES = $(patsubst $(SV_DIR)/%.sv, $(V_DIR)/%.v,$(SV_FILES))
 CPP_FILES = $(wildcard $(CPP_DIR)/*.cpp)
 SIM_FILES = $(patsubst $(SV_DIR)/%.sv, $(OBJ_DIR)/V%,$(SV_FILES))
 
-TOP_MODULE = masked_bv8_inv
+TOP_MODULE = masked_3stage_bv8_inv
 NUM_SHARES ?= 2
+DEFAULT_LATENCY = 3
+LATENCY    ?= $(DEFAULT_LATENCY)
 LIBERTY_FILE = stdcells.lib
 
 .PHONY = all sv2v clean test_% syn_%
@@ -37,13 +39,15 @@ $(V_DIR) $(OBJ_DIR) $(SYN_DIR):
 $(V_DIR)/%.v: $(SV_DIR)/%.sv $(SV_FILES) $(V_DIR)
 	$(SV2V) -I $(SV_DIR) $< > $@
 
-$(OBJ_DIR)/Vmasked%: VERILATOR_DEFINES = -pvalue+NUM_SHARES=$(NUM_SHARES) -CFLAGS -DNUM_SHARES=$(NUM_SHARES)
-$(OBJ_DIR)/Vsyn_masked%: VERILATOR_DEFINES = -CFLAGS -DNUM_SHARES=$(NUM_SHARES)
+$(OBJ_DIR)/Vmasked%: VERILATOR_DEFINES = -pvalue+NUM_SHARES=$(NUM_SHARES) -CFLAGS -DNUM_SHARES=$(NUM_SHARES) 
+$(OBJ_DIR)/Vmasked_aes%: VERILATOR_DEFINED += -pvalue+LATENCY=$(LATENCY) -CFLAGS -DLATENCY=$(LATENCY)
+$(OBJ_DIR)/Vsyn_masked%: VERILATOR_DEFINES = -CFLAGS -DNUM_SHARES=$(NUM_SHARES) -CFLAGS -DLATENCY=$(LATENCY)
 
 $(OBJ_DIR)/V%: $(SV_DIR)/%.sv $(TB_DIR)/tb_%.cpp $(CPP_FILES)
 	$(VERILATOR) $(VERILATOR_DEFINES) $(VERILATOR_FLAGS) $^ --top-module $$(basename -s .sv $<)
 
 syn_masked%: YOSYS_DEFINES = NUM_SHARES=$(NUM_SHARES)
+syn_masked_aes_sbox%: YOSYS_DEFINES+= LATENCY=$(LATENCY)
 syn_masked%: YOSYS_LOG_SUFFIX = $(NUM_SHARES)_log.txt
 syn_%: $(V_DIR)/%.v $(SYN_DIR)
 	$(YOSYS_DEFINES) IN_FILES="$<" TOP_MODULE="$$(basename -s .v $<)" OUT_BASE="$(SYN_DIR)/$@" LIBERTY="$(LIBERTY_FILE)" $(YOSYS) synth.tcl -t -l "$(SYN_DIR)/$@_$(YOSYS_LOG_SUFFIX)"

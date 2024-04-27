@@ -1,5 +1,5 @@
 #include <verilated.h>
-#include "Vmasked_bv8_inv.h"
+#include "Vmasked_3stage_bv8_inv.h"
 #include "gf_operations.h"
 
 #include <iostream>
@@ -46,7 +46,7 @@ int main(int argc, char** argv)
     Verilated::commandArgs(argc, argv);
 
     // Create an instance of the DUT module
-    Vmasked_bv8_inv* dut = new Vmasked_bv8_inv;
+    Vmasked_3stage_bv8_inv* dut = new Vmasked_3stage_bv8_inv;
     printf("Size of in_random: %ld\n", sizeof(dut->in_random));
 
     // Create a randomness source

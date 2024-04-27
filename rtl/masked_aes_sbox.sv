@@ -4,7 +4,7 @@
 `include "aes128_package.sv"
 `include "bv8_front_basis.sv"
 `include "bv8_back_basis.sv"
-`include "masked_bv8_inv.sv"
+`include "masked_3stage_bv8_inv.sv"
 
 // Compute masked AES S-Box
 module masked_aes_sbox (
@@ -13,7 +13,7 @@ module masked_aes_sbox (
     import aes128_package::*;
     parameter NUM_SHARES = 2;
     parameter stage_type_t STAGE_TYPE = DEFAULT_STAGE_TYPE;
-    localparam NUM_RANDOM = num_inv_random(NUM_SHARES, STAGE_TYPE);
+    localparam NUM_RANDOM = num_3stage_inv_random(NUM_SHARES, STAGE_TYPE);
 
     input  bv8_t[NUM_SHARES-1:0] in_a;
     input                    bit in_enc;
@@ -44,7 +44,7 @@ module masked_aes_sbox (
     bv8_t[NUM_SHARES-1:0] front_choice, inv_out;
     assign front_choice = in_enc ? fwd_in : bwd_in;
     
-    masked_bv8_inv #(
+    masked_3stage_bv8_inv #(
         .NUM_SHARES(NUM_SHARES),
         .STAGE_TYPE(STAGE_TYPE)
     ) inv(

@@ -3,7 +3,9 @@
 
 package aes128_package;
     typedef enum bit[0:0] {HPC1, HPC3} stage_type_t;     
-    localparam stage_type_t DEFAULT_STAGE_TYPE = HPC3;
+    /* verilator lint_off UNUSEDPARAM */
+    localparam stage_type_t DEFAULT_STAGE_TYPE = HPC1;
+    /* verilator lint_on UNUSEDPARAM */
     function automatic int num_quad;
         input int i;
         return i * (i - 1) / 2;
@@ -31,6 +33,25 @@ package aes128_package;
         int q = num_quad(i);
         return 1 * (q * 2) + // back_r
                4 * (q * 2) ; // back_ps
+    endfunction
+
+    function automatic int stage_3_lat4_randoms;
+        input int i;
+        int q = num_quad(i);
+        int r = num_zero_random(i);
+        return 1 * (r * 2) + // back_r
+               4 * (q * 2) ; // back_ps
+    endfunction
+
+    function automatic int stage_2_lat4_randoms;
+        input int i;
+        int q = num_quad(i);
+        int r = num_zero_random(i);
+        int basis = 2 * (q * 2) + // theta_random
+                    1 * (q * 4) + // right_p
+                    1 * (q * 4) ; // left_p
+        int refreshes = (r * 4);  // joint_r_raw
+        return basis + refreshes;
     endfunction
 
     function automatic int stage_2_hpc1_randoms;
@@ -62,12 +83,19 @@ package aes128_package;
     endfunction
 
 
-    function automatic int num_inv_random;
+    function automatic int num_3stage_inv_random;
         input int i;
         input stage_type_t t;
         return stage_1_randoms(i) + 
                stage_2_randoms(i, t) +
                stage_3_randoms(i);               
+    endfunction
+
+    function automatic int num_4stage_inv_random;
+        input int i;
+        return stage_1_randoms(i) + 
+               stage_2_lat4_randoms(i) +
+               stage_3_lat4_randoms(i);               
     endfunction
 
     function automatic int qindex;

@@ -8,7 +8,7 @@
 
 module masked_hpc3_mul #(
     parameter NUM_SHARES = 2,
-    parameter BIT_WIDTH = 1
+    parameter BIT_WIDTH = 4
 )(
     in_a, in_b, in_r, in_p, out_c, in_clock, in_reset
 );

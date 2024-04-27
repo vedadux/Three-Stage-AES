@@ -1,5 +1,5 @@
-`ifndef MASKED_BV8_INV_STAGE2_HPC1_SV
-`define MASKED_BV8_INV_STAGE2_HPC1_SV
+`ifndef MASKED_3STAGE_BV8_INV_STAGE2_HPC1_SV
+`define MASKED_3STAGE_BV8_INV_STAGE2_HPC1_SV
 
 `include "aes128_package.sv"
 `include "masked_zero.sv"
@@ -7,14 +7,14 @@
 `include "masked_hpc1_mul.sv"
 
 // Compute second stage of masked GF(2^8) Inverse
-module masked_bv8_inv_stage2_hpc1 (
+module masked_3stage_bv8_inv_stage2_hpc1 (
     in_a0_t0, in_a1_t0, in_pow4_t1, in_random, out_theta_t2, out_mul_a0_t2, out_mul_a1_t2, in_clock, in_reset
 );
     import aes128_package::*;
     parameter NUM_SHARES = 2;
     localparam NUM_QUARDATIC = num_quad(NUM_SHARES);
     localparam NUM_ZERO_RANDOM = num_zero_random(NUM_SHARES);
-    localparam NUM_RANDOM = stage_2_randoms(NUM_SHARES, HPC1);
+    localparam NUM_RANDOM = stage_2_hpc1_randoms(NUM_SHARES);
     
     input  bv4_t[NUM_SHARES-1:0] in_a0_t0;
     input  bv4_t[NUM_SHARES-1:0] in_a1_t0;
@@ -108,5 +108,5 @@ module masked_bv8_inv_stage2_hpc1 (
         .in_clock(in_clock),
         .in_reset(in_reset)
     );
-endmodule : masked_bv8_inv_stage2_hpc1
-`endif // MASKED_BV8_INV_STAGE2_HPC1_SV
+endmodule : masked_3stage_bv8_inv_stage2_hpc1
+`endif // MASKED_3STAGE_BV8_INV_STAGE2_HPC1_SV
