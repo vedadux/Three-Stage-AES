@@ -8,6 +8,16 @@ if {[info exists env(LATENCY)]} {
 } else {
     set LATENCY ""
 }
+if {[info exists env(CHOSEN_STAGE_TYPE)]} {
+    set CHOSEN_STAGE_TYPE $::env(CHOSEN_STAGE_TYPE)
+} else {
+    set CHOSEN_STAGE_TYPE ""
+}
+if {[info exists env(CHOSEN_INVERTER_TYPE)]} {
+    set CHOSEN_INVERTER_TYPE $::env(CHOSEN_INVERTER_TYPE)
+} else {
+    set CHOSEN_INVERTER_TYPE ""
+}
 
 set VLOG_PRE_MAP   $OUT_BASE\_$NUM_SHARES\_pre.v
 set VLOG_POST_MAP  $OUT_BASE\_$NUM_SHARES\_post.v
@@ -55,7 +65,14 @@ yosys log "LATENCY = $LATENCY"
 if {![string equal "" $LATENCY]} {
     yosys chparam -set LATENCY [expr $LATENCY] $TOP_MODULE
 }
-
+yosys log "CHOSEN_STAGE_TYPE = $CHOSEN_STAGE_TYPE"
+if {![string equal "" $CHOSEN_STAGE_TYPE]} {
+    yosys chparam -set CHOSEN_STAGE_TYPE [expr $CHOSEN_STAGE_TYPE] $TOP_MODULE
+}
+yosys log "CHOSEN_INVERTER_TYPE = $CHOSEN_INVERTER_TYPE"
+if {![string equal "" $CHOSEN_INVERTER_TYPE]} {
+    yosys chparam -set CHOSEN_INVERTER_TYPE [expr $CHOSEN_INVERTER_TYPE] $TOP_MODULE
+}
 
 yosys synth -top $TOP_MODULE -flatten -noabc
 yosys tee -o $STATS_FILE stat

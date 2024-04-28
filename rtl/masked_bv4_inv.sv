@@ -16,10 +16,7 @@ module masked_bv4_inv #(
 );
     import aes128_package::*;
     localparam NUM_QUADRATIC = num_quad(NUM_SHARES);
-    localparam NUM_RANDOM = (
-        (2 * 2) // front hpc3
-      + (4 * 1) // back hpc2
-    ) * (NUM_QUADRATIC);
+    localparam NUM_RANDOM = masked_bv4_inv_randoms(NUM_SHARES);
 
     input  bv4_t[NUM_SHARES-1:0] in_x;
     input    bit[NUM_RANDOM-1:0] in_random;

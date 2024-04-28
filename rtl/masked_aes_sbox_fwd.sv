@@ -4,8 +4,7 @@
 `include "aes128_package.sv"
 `include "bv8_front_basis_fwd.sv"
 `include "bv8_back_basis_fwd.sv"
-`include "masked_3stage_bv8_inv.sv"
-`include "masked_4stage_bv8_inv.sv"
+`include "masked_bv8_inv.sv"
 
 // Compute masked AES S-Box
 module masked_aes_sbox_fwd (
@@ -13,10 +12,12 @@ module masked_aes_sbox_fwd (
 );
     import aes128_package::*;
     parameter NUM_SHARES = 2;
-    parameter LATENCY = 4;
-    parameter stage_type_t STAGE_TYPE = DEFAULT_STAGE_TYPE;
-    localparam NUM_RANDOM = (LATENCY == 3) ? num_3stage_inv_random(NUM_SHARES, STAGE_TYPE)
-                                           : num_4stage_inv_random(NUM_SHARES);
+    parameter LATENCY = 3;
+    parameter bit[0:0] CHOSEN_STAGE_TYPE = bit'(DEFAULT_STAGE_TYPE);
+    parameter bit[0:0] CHOSEN_INVERTER_TYPE = bit'(DEFAULT_INVERTER_TYPE);
+    localparam stage_type_t STAGE_TYPE = stage_type_t'(CHOSEN_STAGE_TYPE);
+    localparam inverter_type_t INVERTER_TYPE = inverter_type_t'(CHOSEN_INVERTER_TYPE);
+    localparam NUM_RANDOM = num_bv8_inv_random(NUM_SHARES, LATENCY, STAGE_TYPE, INVERTER_TYPE);
 
     input  bv8_t[NUM_SHARES-1:0] in_a;
     input    bit[NUM_RANDOM-1:0] in_random;
@@ -38,32 +39,18 @@ module masked_aes_sbox_fwd (
 
     bv8_t[NUM_SHARES-1:0] inv_out;
     
-    generate
-        if (LATENCY == 3) begin : gen_lat3
-            masked_3stage_bv8_inv #(
-                .NUM_SHARES(NUM_SHARES),
-                .STAGE_TYPE(STAGE_TYPE)
-            ) inv (
-                .in_a(fwd_in), 
-                .in_random(in_random), 
-                .out_b(inv_out),
-                .in_clock(in_clock),
-                .in_reset(in_reset)
-            );
-        end else if (LATENCY == 4) begin : gen_lat4
-            masked_4stage_bv8_inv #(
-                .NUM_SHARES(NUM_SHARES)
-            ) inv (
-                .in_a(fwd_in), 
-                .in_random(in_random), 
-                .out_b(inv_out),
-                .in_clock(in_clock),
-                .in_reset(in_reset)
-            );
-        end else begin : gen_error
-            $error("Unsupported latency");    
-        end
-    endgenerate
+    masked_bv8_inv #(
+        .NUM_SHARES(NUM_SHARES),
+        .STAGE_TYPE(STAGE_TYPE),
+        .LATENCY(LATENCY),
+        .INVERTER_TYPE(INVERTER_TYPE)
+    ) inv (
+        .in_a(fwd_in), 
+        .in_random(in_random), 
+        .out_b(inv_out),
+        .in_clock(in_clock),
+        .in_reset(in_reset)
+    );
 
     bv8_t[NUM_SHARES-1:0] fwd_out;
 

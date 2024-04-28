@@ -2,9 +2,12 @@
 `define AES128_PACKAGE_SV
 
 package aes128_package;
-    typedef enum bit[0:0] {HPC1, HPC3} stage_type_t;     
+    typedef enum bit[0:0] {HPC1 = 1'b0, HPC3 = 1'b1} stage_type_t;
+    typedef enum bit[0:0] {NEW_DESIGN = 1'b0, CANRIGHT_DESIGN = 1'b1} inverter_type_t;
+       
     /* verilator lint_off UNUSEDPARAM */
     localparam stage_type_t DEFAULT_STAGE_TYPE = HPC1;
+    localparam inverter_type_t DEFAULT_INVERTER_TYPE = NEW_DESIGN;
     /* verilator lint_on UNUSEDPARAM */
     function automatic int num_quad;
         input int i;
@@ -97,6 +100,68 @@ package aes128_package;
                stage_2_lat4_randoms(i) +
                stage_3_lat4_randoms(i);               
     endfunction
+
+    function automatic int stage_4_canright_hpc1_randoms;
+        input int i;
+        int q = num_quad(i);
+        int r = num_zero_random(i);
+        int c = (i == 2) ? 1 : 2;
+        return c * (r * 4) + // left_r, right_r
+               2 * (q * 4) ; // left_p, right_p
+    endfunction
+
+    function automatic int stage_4_canright_hpc3_randoms;
+        input int i;
+        int q = num_quad(i);
+        return 1 * (q * 4) + // in_joint_r
+               2 * (q * 4) ; // left_p, right_p
+    endfunction
+
+    function automatic int stage_4_canright_randoms;
+        input int i;
+        input stage_type_t t;
+        return (t == HPC1) ? stage_4_canright_hpc1_randoms(i)
+                           : stage_4_canright_hpc3_randoms(i);
+    endfunction
+
+    function automatic int masked_bv4_inv_randoms;
+        input int i;
+        int q = num_quad(i);
+        return 2 * (q * 1) + // front_r
+               2 * (q * 1) + // front_p
+               4 * (q * 1) ; // back_r
+    endfunction
+
+    function automatic int num_canright_inv_random;
+        input int i;
+        input stage_type_t t;
+        return stage_1_randoms(i) + 
+               masked_bv4_inv_randoms(i) +
+               stage_4_canright_randoms(i, t);               
+    endfunction
+
+    function automatic int num_bv8_inv_random;
+        input int i;
+        input int l;
+        input stage_type_t s;
+        input inverter_type_t v;
+        
+        return (v == NEW_DESIGN) ?
+            (
+                (l == 3) ? 
+                    (
+                        num_3stage_inv_random(i, s)
+                    ) :
+                    (
+                        num_4stage_inv_random(i)
+                    )
+            ) :
+            (
+                num_canright_inv_random(i, s)
+            )
+        ;               
+    endfunction
+
 
     function automatic int qindex;
         input int i;
