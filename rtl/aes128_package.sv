@@ -127,9 +127,12 @@ package aes128_package;
     function automatic int masked_bv4_inv_randoms;
         input int i;
         int q = num_quad(i);
+        int r = num_zero_random(i);
+        int c = (i == 2) ? 1 : 4;
         return 2 * (q * 1) + // front_r
                2 * (q * 1) + // front_p
-               4 * (q * 1) ; // back_r
+               c * (r * 1) + // back_r
+               4 * (q * 1) ; // back_p
     endfunction
 
     function automatic int num_canright_inv_random;

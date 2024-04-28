@@ -16,6 +16,7 @@ module masked_bv4_inv #(
 );
     import aes128_package::*;
     localparam NUM_QUADRATIC = num_quad(NUM_SHARES);
+    localparam NUM_ZERO_RANDOM = num_zero_random(NUM_SHARES);
     localparam NUM_RANDOM = masked_bv4_inv_randoms(NUM_SHARES);
 
     input  bv4_t[NUM_SHARES-1:0] in_x;
@@ -24,6 +25,8 @@ module masked_bv4_inv #(
     input                    bit in_clock;
     input                    bit in_reset;
     
+    genvar i;
+
     bv2_t[NUM_SHARES-1:0] xh_t0, xl_t0;
 
     bit[NUM_SHARES-1:0] x0_t0, x1_t0, x2_t0, x3_t0;
@@ -51,10 +54,45 @@ module masked_bv4_inv #(
         .out_b({x3_t0, x2_t0})
     );
     
-    bit[NUM_QUADRATIC-1:0] fr1, fr2, fp1, fp2, br1, br2, br3, br4; 
+    bit[1:0][NUM_QUADRATIC-1:0] front_r, front_p; 
 
-    assign {br4, br3, br2, br1, fp2, fr2, fp1, fr1} = in_random;
-
+    bit[3:0][NUM_SHARES-1:0] back_r;
+    bit[3:0][NUM_QUADRATIC-1:0] back_p;
+    
+    generate
+        if (NUM_SHARES == 2) begin : zero_2_shares
+            bit[NUM_ZERO_RANDOM-1:0] back_r_raw;
+            bit[NUM_SHARES-1:0] back_r_shared;
+            assign {back_p, back_r_raw, front_p, front_r} = in_random;
+            masked_zero #(
+                .NUM_SHARES(NUM_SHARES), 
+                .BIT_WIDTH(1)
+            ) shared_0 (
+                .in_random(back_r_raw),
+                .out_random(back_r_shared),
+                .in_clock(in_clock),
+                .in_reset(in_reset)
+            );
+            for (i = 0; i < 4; i++) begin : gen_eqs
+                assign back_r[i] = back_r_shared;
+            end
+        end else begin : zero_more_shares
+            bit[3:0][NUM_ZERO_RANDOM-1:0] back_r_raws;
+            assign {back_p, back_r_raws, front_p, front_r} = in_random;
+            for (i = 0; i < 4; i++) begin : gen_zeros    
+                masked_zero #(
+                    .NUM_SHARES(NUM_SHARES), 
+                    .BIT_WIDTH(1)
+                ) shared_0_i (
+                    .in_random(back_r_raws[i]),
+                    .out_random(back_r[i]),
+                    .in_clock(in_clock),
+                    .in_reset(in_reset)
+                );
+            end
+        end
+    endgenerate
+    
     bit[NUM_SHARES-1:0] a0_t0, a1_t0;
     assign a0_t0 = x1_t0 ^ x0_t0;
     assign a1_t0 = x3_t0 ^ x2_t0;
@@ -66,7 +104,7 @@ module masked_bv4_inv #(
         .BIT_WIDTH(1)
     ) mul_b0 (
         .in_a(x2_t0), .in_b(x0_t0), 
-        .in_r(fr1), .in_p(fp1), 
+        .in_r(front_r[0]), .in_p(front_p[0]), 
         .out_c(b0_t1), 
         .in_clock(in_clock), .in_reset(in_reset)
     );
@@ -76,7 +114,7 @@ module masked_bv4_inv #(
         .BIT_WIDTH(1)
     ) mul_b1 (
         .in_a(x3_t0), .in_b(x1_t0), 
-        .in_r(fr2), .in_p(fp2), 
+        .in_r(front_r[1]), .in_p(front_p[1]), 
         .out_c(b1_t1), 
         .in_clock(in_clock), .in_reset(in_reset)
     );
@@ -102,40 +140,48 @@ module masked_bv4_inv #(
     
     bit[NUM_SHARES-1:0] e0_t2, e1_t2;
     // e0 = x3 & c0;
-    masked_hpc2_mul #(
-        .NUM_SHARES(NUM_SHARES)
+    masked_hpc1_mul #(
+        .NUM_SHARES(NUM_SHARES),
+        .BIT_WIDTH(1)
     ) mul_e0 (
         .in_a(c0_t1), .in_b(x3_t0), 
-        .in_r(br1), 
+        .in_r(back_r[0]),
+        .in_p(back_p[0]),
         .out_c(e0_t2), 
         .in_clock(in_clock), .in_reset(in_reset)
     );
     // e1 = x1 & c1;
-    masked_hpc2_mul #(
-        .NUM_SHARES(NUM_SHARES)
+    masked_hpc1_mul #(
+        .NUM_SHARES(NUM_SHARES),
+        .BIT_WIDTH(1)
     ) mul_e1 (
         .in_a(c1_t1), .in_b(x1_t0), 
-        .in_r(br2), 
+        .in_r(back_r[1]),
+        .in_p(back_p[1]),
         .out_c(e1_t2), 
         .in_clock(in_clock), .in_reset(in_reset)
     );
 
     bit[NUM_SHARES-1:0] f0_t2, f1_t2;
     // f0 = a1 & d0;
-    masked_hpc2_mul #(
-        .NUM_SHARES(NUM_SHARES)
+    masked_hpc1_mul #(
+        .NUM_SHARES(NUM_SHARES),
+        .BIT_WIDTH(1)
     ) mul_f0 (
         .in_a(d0_t1), .in_b(a1_t0), 
-        .in_r(br3), 
+        .in_r(back_r[2]),
+        .in_p(back_p[2]),
         .out_c(f0_t2), 
         .in_clock(in_clock), .in_reset(in_reset)
     );
     // f1 = a0 & d1;
-    masked_hpc2_mul #(
-        .NUM_SHARES(NUM_SHARES)
+    masked_hpc1_mul #(
+        .NUM_SHARES(NUM_SHARES),
+        .BIT_WIDTH(1)
     ) mul_f1 (
         .in_a(d1_t1), .in_b(a0_t0), 
-        .in_r(br4), 
+        .in_r(back_r[3]),
+        .in_p(back_p[3]),
         .out_c(f1_t2), 
         .in_clock(in_clock), .in_reset(in_reset)
     );
