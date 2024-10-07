@@ -1,13 +1,19 @@
 import json
-from verif_msi import *
+from VerifMSI import *
 import argparse
 
 NUM_SHARES = 0
 
 CELLS_INFO = {
     "$_AND_":   {"ins": ["A", "B"], "out": "Y"},
+    "$_NAND_":  {"ins": ["A", "B"], "out": "Y"},
+    "$_OR_":    {"ins": ["A", "B"], "out": "Y"},
+    "$_NOR_":   {"ins": ["A", "B"], "out": "Y"},
     "$_XOR_":   {"ins": ["A", "B"], "out": "Y"},
+    "$_XNOR_":  {"ins": ["A", "B"], "out": "Y"},
     "$_NOT_":   {"ins": ["A"], "out": "Y"},
+    "$_ANDNOT_": {"ins": ["A", "B"], "out": "Y"},
+    "$_ORNOT_":  {"ins": ["A", "B"], "out": "Y"},
     "$_DFF_P_": {"ins": ["D"], "out": "Q"},
 }
 
@@ -36,6 +42,36 @@ def xor_impl(a, b):
         return not_impl(a) if b else a
     return xorGate(a, b)
 
+def xnor_impl(a, b):
+    return not_impl(xor_impl(a, b))
+
+
+# def or_impl(a, b):
+#     a_int, b_int = (type(a) is int), (type(b) is int)
+#     if a_int and b_int:
+#         return a | b
+#     elif a_int:
+#         return 1 if a else b
+#     elif b_int:
+#         return 1 if b else a
+#     return orGate(a, b)
+
+def or_impl(a, b):
+    return not_impl(and_impl(not_impl(a), not_impl(b)))
+
+def nand_impl(a, b):
+    return not_impl(and_impl(a, b))
+
+def nor_impl(a, b):
+    return not_impl(or_impl(a, b))
+
+def andnot_impl(a, b):
+    return and_impl(a, not_impl(b))
+
+def ornot_impl(a, b):
+    return or_impl(a, not_impl(b))
+
+
 def dff_impl(d):
     if type(d) is int:
         return d
@@ -52,8 +88,14 @@ def evaluate(bit, bit_defines, symbol_table):
 
 CELL_IMPL = {
     "$_AND_":   and_impl,
+    "$_NAND_":  nand_impl,
+    "$_OR_":    or_impl,
+    "$_NOR_":   nor_impl,
     "$_XOR_":   xor_impl,
+    "$_XNOR_":  xnor_impl,
     "$_NOT_":   not_impl,
+    "$_ANDNOT_": andnot_impl,
+    "$_ORNOT_":  ornot_impl,
     "$_DFF_P_": dff_impl,
 }
 

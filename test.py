@@ -139,10 +139,10 @@ for c,b in zip(cost, bits):
 
 
 area = """
-[00000.640166]    Chip area for module '\masked_hpc3_mul': 51.604000
-[00000.780512]    Chip area for module '\masked_hpc3_mul': 126.882000
-[00000.782613]    Chip area for module '\masked_hpc3_mul': 234.080000
-[00001.107227]    Chip area for module '\masked_hpc3_mul': 372.400000
+[00000.640166]    Chip area for module '\masked_hpc3_1_mul': 51.604000
+[00000.780512]    Chip area for module '\masked_hpc3_1_mul': 126.882000
+[00000.782613]    Chip area for module '\masked_hpc3_1_mul': 234.080000
+[00001.107227]    Chip area for module '\masked_hpc3_1_mul': 372.400000
 """
 rands = """
 input in_p;
