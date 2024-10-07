@@ -4,7 +4,7 @@
 `include "aes128_package.sv"
 `include "masked_split_bv.sv"
 `include "register.sv"
-`include "masked_hpc3_mul.sv"
+`include "masked_hpc3_1_mul.sv"
 `include "masked_hpc2_mul.sv"
 `include "masked_join_bv.sv"
 
@@ -99,7 +99,7 @@ module masked_bv4_inv #(
 
     bit[NUM_SHARES-1:0] b0_t1, b1_t1;
     // b0 = x2 & x0;
-    masked_hpc3_mul #(
+    masked_hpc3_1_mul #(
         .NUM_SHARES(NUM_SHARES), 
         .BIT_WIDTH(1)
     ) mul_b0 (
@@ -109,7 +109,7 @@ module masked_bv4_inv #(
         .in_clock(in_clock), .in_reset(in_reset)
     );
     // b1 = x3 & x1;
-    masked_hpc3_mul #(
+    masked_hpc3_1_mul #(
         .NUM_SHARES(NUM_SHARES), 
         .BIT_WIDTH(1)
     ) mul_b1 (

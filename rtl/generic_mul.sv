@@ -26,7 +26,7 @@ module generic_mul #(
         end else if (BIT_WIDTH == 4) begin : gen_bv4_mul
             bv4_mul multiplier_bv4 (.in_a(in_a), .in_b(in_b), .out_c(out_c));
         end else begin : gen_error
-            $error("Unsupported type");
+            $fatal("Unsupported type");
         end
     endgenerate
 endmodule : generic_mul

@@ -35,7 +35,7 @@ module masked_zero #(
             assign shared_zero = in_random ^ shuffled_random;
         end
         else begin : gen_error
-            $error("Unsuported number of shares");
+            $fatal("Unsuported number of shares");
         end
     endgenerate
 

@@ -31,7 +31,7 @@ TOP_MODULE = masked_3stage_bv8_inv
 NUM_SHARES ?= 2
 DEFAULT_LATENCY = 3
 LATENCY    ?= $(DEFAULT_LATENCY)
-DEFAULT_STAGE_TYPE = HPC1
+DEFAULT_STAGE_TYPE = HPC3
 STAGE_TYPE ?= $(DEFAULT_STAGE_TYPE)
 DEFAULT_INVERTER_TYPE = NEW_DESIGN
 INVERTER_TYPE ?= $(DEFAULT_INVERTER_TYPE)
@@ -69,12 +69,18 @@ syn_masked_aes_sbox%: YOSYS_DEFINES += CHOSEN_INVERTER_TYPE=$(value $(INVERTER_T
 
 syn_masked%: YOSYS_LOG_SUFFIX = $(NUM_SHARES)_log.txt
 syn_%: $(V_DIR)/%.v $(SYN_DIR)
+	cp $< $(V_DIR)/tmp_$$(basename $<)
 	$(YOSYS_DEFINES) IN_FILES="$<" TOP_MODULE="$$(basename -s .v $<)" OUT_BASE="$(SYN_DIR)/$@" LIBERTY="$(LIBERTY_FILE)" $(YOSYS) synth.tcl -t -l "$(SYN_DIR)/$@_$(YOSYS_LOG_SUFFIX)"
 
 $(OBJ_DIR)/Vsyn_masked%: syn_masked% $(TB_DIR)/tb_masked%.cpp $(CPP_FILES)
 	$(VERILATOR) $(VERILATOR_DEFINES) $(VERILATOR_SYN_FLAGS) $(SYN_DIR)/$<_$(NUM_SHARES)_pre.v $(wordlist 2,$(words $^),$^) --top-module $$(echo $< | sed 's/^syn_//') -o $(shell pwd)/$@
 
 # $(SYN_DIR)/syn_%_pre.v $(SYN_DIR)/syn_%_post.v $(SYN_DIR)/syn_%_pre.json $(SYN_DIR)/syn_%_post.json $(SYN_DIR)/syn_%_stats.json: syn_%
+
+show_masked%: $(SYN_DIR)/syn_masked%_$(NUM_SHARES)_pre.json
+	IN_FILE="$<" $(YOSYS) show.tcl -t
+show_%: $(SYN_DIR)/syn_%__pre.json
+	IN_FILE="$<" $(YOSYS) show.tcl -t
 
 clean:
 	rm -rf $(V_DIR) $(OBJ_DIR) $(SYN_DIR)

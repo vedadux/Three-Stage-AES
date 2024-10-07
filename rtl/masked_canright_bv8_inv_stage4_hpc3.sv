@@ -3,7 +3,7 @@
 
 `include "aes128_package.sv"
 `include "register.sv"
-`include "masked_hpc3_mul.sv"
+`include "masked_hpc3_1_mul.sv"
 `include "masked_zero.sv"
 
 module masked_canright_bv8_inv_stage4_hpc3 #(
@@ -41,7 +41,7 @@ module masked_canright_bv8_inv_stage4_hpc3 #(
         .in_clock(in_clock), .in_reset(in_reset)
     );
 
-    masked_hpc3_mul #(
+    masked_hpc3_1_mul #(
         .NUM_SHARES(NUM_SHARES),
         .BIT_WIDTH(BIT_WIDTH)
     ) mul_xa0 (
@@ -54,7 +54,7 @@ module masked_canright_bv8_inv_stage4_hpc3 #(
         .in_reset(in_reset)
     );
 
-    masked_hpc3_mul #(
+    masked_hpc3_1_mul #(
         .NUM_SHARES(NUM_SHARES),
         .BIT_WIDTH(BIT_WIDTH)
     ) mul_xa1 (

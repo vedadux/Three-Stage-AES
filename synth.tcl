@@ -2,12 +2,19 @@ set IN_FILES       [regexp -all -inline {\S+} $::env(IN_FILES)]
 set TOP_MODULE     $::env(TOP_MODULE)
 set OUT_BASE       $::env(OUT_BASE)
 set LIBERTY        $::env(LIBERTY)
-set NUM_SHARES     $::env(NUM_SHARES)
+
+if {[info exists env(NUM_SHARES)]} {
+    set NUM_SHARES $::env(NUM_SHARES)
+} else {
+    set NUM_SHARES ""
+}
+
 if {[info exists env(LATENCY)]} {
     set LATENCY $::env(LATENCY)
 } else {
     set LATENCY ""
 }
+
 if {[info exists env(CHOSEN_STAGE_TYPE)]} {
     set CHOSEN_STAGE_TYPE $::env(CHOSEN_STAGE_TYPE)
 } else {
@@ -24,34 +31,6 @@ set VLOG_POST_MAP  $OUT_BASE\_$NUM_SHARES\_post.v
 set JSON_PRE_MAP   $OUT_BASE\_$NUM_SHARES\_pre.json
 set JSON_POST_MAP  $OUT_BASE\_$NUM_SHARES\_post.json
 set STATS_FILE     $OUT_BASE\_$NUM_SHARES\_stats.txt
-
-proc get_gates {filename} {
-    set file [open $filename r]
-    set content [read $file]
-    close $file
-
-    set result ""
-    set pattern {\$_(\S+)_}
-    set matches [regexp -all -inline -lineanchor -- $pattern $content]
-    puts $matches
-    foreach match $matches {
-        if {[string first "$" $match] == -1 &&
-            [string first "DFF" $match] == -1 && 
-            [string first "NOT" $match] == -1} {
-           
-            if {[string equal "AND" $match]} {
-                lappend result "NAND";
-            } elseif {[string equal "XOR" $match]} {
-                lappend result "XOR";
-                lappend result "XNOR";
-            } else {
-                lappend result $match
-            }
-        }
-    }
-    
-    return [join $result ","]
-}
 
 foreach file $IN_FILES {
     yosys read_verilog -defer $file
@@ -74,11 +53,8 @@ if {![string equal "" $CHOSEN_INVERTER_TYPE]} {
     yosys chparam -set CHOSEN_INVERTER_TYPE [expr $CHOSEN_INVERTER_TYPE] $TOP_MODULE
 }
 
-yosys synth -top $TOP_MODULE -flatten -noabc
+yosys synth -top $TOP_MODULE -flatten
 yosys tee -o $STATS_FILE stat
-set gates [get_gates $STATS_FILE]
-yosys log "Gates are $gates"
-yosys abc -g $gates
 yosys clean
 yosys stat
 

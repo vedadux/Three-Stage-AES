@@ -4,15 +4,20 @@ RAND_GE = 39.4
 
 my_data = [
     [
-        [ 32.0,  1875.7],
-        [ 96.0,  4176.3],
-        [192.0,  7687.7],
-        [320.0, 11465.0],
+        [ 32,  1875.7],
+        [ 96,  4176.3],
+        [192,  7687.7],
+        [320, 11465.0],
     ], [
-        [ 29.0, 1806.3],
-        [ 96.0, 3880.0],
-        [192.0, 6563.0],
-        [300.0, 9893.0],
+        [ 29, 1806.3],
+        [ 96, 3880.0],
+        [192, 6563.0],
+        [300, 9893.0],
+    ] , [
+        [ 34,  1905.0],
+        [ 96,  4126.0],
+        [192,  7215.7],
+        [310, 10899.7],
     ]
 ]
 
@@ -68,7 +73,7 @@ for data in sota_data:
         assert(len(arr) == 2)
         arr.append(arr[0] * RAND_GE + arr[1])
 
-for sdata in sota_data:
+for sdata in sota_data + my_data:
     for r_sota, r_3lat, r_4lat in zip(sdata, my_data[0], my_data[1]):
         comp_3 = [(1 - new/old) * 100 for new, old in zip(r_3lat, r_sota)]
         comp_4 = [(1 - new/old) * 100 for new, old in zip(r_4lat, r_sota)]

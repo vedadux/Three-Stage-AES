@@ -2,7 +2,7 @@
 `define MASKED_TEST_HPC3_REUSE_PARALLEL_SV
 
 `include "aes128_package.sv"
-`include "masked_hpc3_mul.sv"
+`include "masked_hpc3_1_mul.sv"
 
 module masked_test_hpc3_reuse_parallel #(
     parameter NUM_SHARES = 2,
@@ -27,7 +27,7 @@ module masked_test_hpc3_reuse_parallel #(
     input in_reset;
     
     // Multiply B and A
-    masked_hpc3_mul #(
+    masked_hpc3_1_mul #(
         .NUM_SHARES(NUM_SHARES),
         .BIT_WIDTH(BIT_WIDTH)
     ) mul1 (
@@ -41,7 +41,7 @@ module masked_test_hpc3_reuse_parallel #(
     );
 
     // Multiply C and A
-    masked_hpc3_mul #(
+    masked_hpc3_1_mul #(
         .NUM_SHARES(NUM_SHARES),
         .BIT_WIDTH(BIT_WIDTH)
     ) mul2 (

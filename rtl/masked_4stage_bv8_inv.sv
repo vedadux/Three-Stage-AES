@@ -3,7 +3,7 @@
 
 `include "aes128_package.sv"
 `include "masked_split_bv.sv"
-`include "masked_hpc3_mul.sv"
+`include "masked_hpc3_1_mul.sv"
 `include "register.sv"
 `include "bv4_sq_scl_s.sv"
 `include "bv4_pow4.sv"
@@ -48,7 +48,7 @@ module masked_4stage_bv8_inv (
     );
 
     bv4_t[NUM_SHARES-1:0] a_mul_t1, a_xor_t1;
-    masked_hpc3_mul #(
+    masked_hpc3_1_mul #(
         .NUM_SHARES(NUM_SHARES), 
         .BIT_WIDTH(4)) 
     mul_front (

@@ -2,8 +2,8 @@
 `define MASKED_TEST_HPC3_REUSE_SEQUENTIAL_SV
 
 `include "aes128_package.sv"
-`include "masked_hpc3_mul.sv"
-`include "masked_hpc3_mul_skewed.sv"
+`include "masked_hpc3_1_mul.sv"
+`include "masked_hpc3_1_mul_skewed.sv"
 
 module masked_test_hpc3_reuse_sequential #(
     parameter NUM_SHARES = 2,
@@ -26,7 +26,7 @@ module masked_test_hpc3_reuse_sequential #(
     input in_reset;
     
     // Multiply A and B
-    masked_hpc3_mul #(
+    masked_hpc3_1_mul #(
         .NUM_SHARES(NUM_SHARES),
         .BIT_WIDTH(BIT_WIDTH)
     ) mul1 (
@@ -40,7 +40,7 @@ module masked_test_hpc3_reuse_sequential #(
     );
 
     // Multiply C and B
-    masked_hpc3_mul_skewed #(
+    masked_hpc3_1_mul_skewed #(
         .NUM_SHARES(NUM_SHARES),
         .BIT_WIDTH(BIT_WIDTH),
         .DELAY_BR(1)

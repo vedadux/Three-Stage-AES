@@ -3,7 +3,7 @@
 
 `include "aes128_package.sv"
 `include "masked_bv4_comp_theta.sv"
-`include "masked_hpc3_mul.sv"
+`include "masked_hpc3_1_mul.sv"
 
 // Compute second stage of masked GF(2^8) Inverse
 module masked_3stage_bv8_inv_stage2_hpc3 (
@@ -56,7 +56,7 @@ module masked_3stage_bv8_inv_stage2_hpc3 (
         .in_reset(in_reset)
     );
     
-    masked_hpc3_mul #(
+    masked_hpc3_1_mul #(
         .NUM_SHARES(NUM_SHARES), 
         .BIT_WIDTH(4)
     ) mul_left (
@@ -69,7 +69,7 @@ module masked_3stage_bv8_inv_stage2_hpc3 (
         .in_reset(in_reset)
     );
     
-    masked_hpc3_mul #(
+    masked_hpc3_1_mul #(
         .NUM_SHARES(NUM_SHARES), 
         .BIT_WIDTH(4)
     ) mul_right (

@@ -2,7 +2,7 @@
 `define MASKED_BV4_COMP_THETA_SV
 
 `include "aes128_package.sv"
-`include "masked_hpc3_mul.sv"
+`include "masked_hpc3_1_mul.sv"
 `include "masked_split_bv.sv"
 `include "bv2_sq.sv"
 `include "bv2_scl_sigma.sv"
@@ -37,7 +37,7 @@ module masked_bv4_comp_theta #(
     );
 
     bv2_t[NUM_SHARES-1:0] a_mul_t1, a_xor_t1;
-    masked_hpc3_mul #(.NUM_SHARES(NUM_SHARES), .BIT_WIDTH(2)) mul (
+    masked_hpc3_1_mul #(.NUM_SHARES(NUM_SHARES), .BIT_WIDTH(2)) mul (
         .in_a(a_t0[1]), 
         .in_b(a_t0[0]),
         .in_r(random_r),

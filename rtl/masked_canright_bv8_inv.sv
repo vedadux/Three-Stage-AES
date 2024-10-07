@@ -3,7 +3,7 @@
 
 `include "aes128_package.sv"
 `include "masked_split_bv.sv"
-`include "masked_hpc3_mul.sv"
+`include "masked_hpc3_1_mul.sv"
 `include "register.sv"
 `include "bv4_sq_scl_s.sv"
 `include "masked_bv4_inv.sv"
@@ -49,7 +49,7 @@ module masked_canright_bv8_inv (
     );
 
     bv4_t[NUM_SHARES-1:0] a_mul_t1, a_xor_t1;
-    masked_hpc3_mul #(
+    masked_hpc3_1_mul #(
         .NUM_SHARES(NUM_SHARES), 
         .BIT_WIDTH(4)) 
     mul_front (
@@ -116,7 +116,7 @@ module masked_canright_bv8_inv (
                 .in_reset(in_reset)
             );
         end else begin : stage4_error
-        $error("No known stage type");
+        $fatal("No known stage type");
         end
     endgenerate
 

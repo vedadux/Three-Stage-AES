@@ -22,7 +22,7 @@ package aes128_package;
             4: return 4;
             5: return 5;
         endcase
-        $error("Unsupported number of shares");
+        $fatal("Unsupported number of shares");
     endfunction
     
     function automatic int stage_1_randoms;
@@ -165,15 +165,23 @@ package aes128_package;
         ;               
     endfunction
 
+    function automatic int sindex;
+        input int i;
+        input int n;
+        begin
+            if (i < 0 || i >= n) $fatal("i must be smaller than n");
+            return (i + 1) % n;
+        end
+    endfunction
 
     function automatic int qindex;
         input int i;
         input int j;
         input int n;
         begin
-            if (i < 0 || i >= n) $error("i must be smaller than n");
-            if (j < 0 || j >= n) $error("j must be smaller than n");
-            if (i == j) $error("i and j must be different");
+            if (i < 0 || i >= n) $fatal("i must be smaller than n");
+            if (j < 0 || j >= n) $fatal("j must be smaller than n");
+            if (i == j) $fatal("i and j must be different");
             return (j < i) ? (j * (2 * n - (j+1)) / 2 + i - j - 1)
                            : (i * (2 * n - (i+1)) / 2 + j - i - 1);
         end

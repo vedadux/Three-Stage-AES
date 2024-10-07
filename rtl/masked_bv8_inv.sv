@@ -49,10 +49,10 @@ module masked_bv8_inv (
                         .in_reset(in_reset)
                     );
                 end else begin : gen_error_lat4_new
-                    $error("Unsupported stage type");
+                    $fatal("Unsupported stage type");
                 end
             end else begin : gen_error_new
-                $error("Unsupported latency");
+                $fatal("Unsupported latency");
             end
         end else if (INVERTER_TYPE == CANRIGHT_DESIGN) begin : gen_canright_desing
             if (LATENCY == 4) begin : gen_canright
@@ -67,10 +67,10 @@ module masked_bv8_inv (
                     .in_reset(in_reset)
                 );
             end else begin : gen_error_canright
-                $error("Unsupported latency");
+                $fatal("Unsupported latency");
             end
         end else begin : gen_error_design
-            $error("Unsupported inverter type");
+            $fatal("Unsupported inverter type");
         end
     endgenerate
 endmodule : masked_bv8_inv
